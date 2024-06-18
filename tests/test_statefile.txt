@@ -1,0 +1,115 @@
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h"}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "Hello", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name"}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h"}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "Hello", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name"}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h"}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "Hello", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name"}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h"}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "Hello", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name"}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h"}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "Hello", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name"}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h"}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "Hello", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name"}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h"}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "Hello", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name"}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h"}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "Hello", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name"}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h"}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "Hello", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name"}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h"}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "Hello", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "Hello", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "Hello", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "Hello", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "Hello", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "Hello", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "Hello", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "Hello", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "Hello", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "Hello", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "sourceNumber": "+123456789", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "sourceNumber": "+123456789", "dataMessage": {"message": "Hello", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "sourceNumber": "+123456789", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+!summary 5h
+Hello
+!summary 5h
+!summary 5h
+Hello
+!summary 5h
+!summary 5h
+Hello
+!summary 5h
+!summary 5h
+Hello
+!summary 5h
+!summary 5h
+Hello
+!summary 5h
+!summary 5h
+Hello
+!summary 5h
+!summary 5h
+Hello
+!summary 5h
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "sourceNumber": "+123456789", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "sourceNumber": "+123456789", "dataMessage": {"message": "Hello", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "sourceNumber": "+123456789", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "sourceNumber": "+123456789", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "sourceNumber": "+123456789", "dataMessage": {"message": "Hello", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "sourceNumber": "+123456789", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "sourceNumber": "+123456789", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "sourceNumber": "+123456789", "dataMessage": {"message": "Hello", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "sourceNumber": "+123456789", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "sourceNumber": "+123456789", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "sourceNumber": "+123456789", "dataMessage": {"message": "Hello", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "sourceNumber": "+123456789", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "sourceNumber": "+123456789", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "sourceNumber": "+123456789", "dataMessage": {"message": "Hello", "groupInfo": {"groupId": "abc123"}}}}
+{"envelope": {"timestamp": 1629879600000, "sourceName": "Example Name", "sourceNumber": "+123456789", "dataMessage": {"message": "!summary 5h", "groupInfo": {"groupId": "abc123"}}}}

@@ -1,0 +1,6 @@
+google-cloud-aiplatform
+google-generativeai
+ipython
+rel
+requests
+websocket-client

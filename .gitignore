@@ -1,0 +1,12 @@
+.vscode
+venv
+__pycache__
+images
+.docker_temp_*
+*.swp
+*.swo
+image.tar
+auth.json
+messages.db
+prompt_prefix.txt
+test_messages.db
