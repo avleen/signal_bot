@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
-import imagine
+import imagine_openai
 import json
 import os
 import rel
@@ -124,12 +124,12 @@ def on_message(ws, message):
         try:
             prompt = msg.split('!imagine ')[1]
             print(f"INFO: Image requested by {parsed['sourceName']}: {prompt}")
-            image_file = imagine.imagine(prompt, imagedir, parsed['sourceName'])
+            image_file, revised_prompt = imagine_openai.imagine(prompt, imagedir, parsed['sourceName'])
         except Exception as e:
             print(f"ERROR: {str(e)} {traceback.print_exc()}")
             res = send_message(url, f"ERROR: {str(e)}", phone, [groupId])
             return
-        res = send_message(url, f"Image generated from prompt '{prompt}'", phone, [groupId], image_file)
+        res = send_message(url, f"Image generated with revised prompt: '{revised_prompt}'", phone, [groupId], image_file)
         if res.status_code != 201:
             print(f"ERROR: {res.text}")
         

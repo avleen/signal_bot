@@ -40,7 +40,7 @@ def imagine(prompt, outputdir, requestor="None"):
         with open(filename, "wb") as f:
             f.write(data)
         print(f"INFO: Image saved to {filename}, revised prompt: {revised_prompt}")
-        return filename
+        return filename, revised_prompt
     except Exception as e:
         print(f"ERROR: {str(e)}")
         # Re-raise the exception so the caller can handle it
