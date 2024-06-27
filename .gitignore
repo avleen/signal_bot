@@ -1,4 +1,5 @@
 .vscode
+go/__debug*
 python/venv
 python/__pycache__
 images

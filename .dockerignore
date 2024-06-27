@@ -1,4 +1,5 @@
 .git
+go/__debug*
 python/__pycache__
 .docker_temp_*
 image.tar
