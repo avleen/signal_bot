@@ -5,13 +5,13 @@ WORKDIR /app
 
 # Install any needed packages specified in requirements.txt
 RUN apk add --update --no-cache --virtual .tmp-build-deps gcc libc-dev g++ rust cargo geos-dev
-COPY requirements.txt /app/requirements.txt
-RUN pip install --prefer-binary -r requirements.txt
+COPY requirements.txt /app/python/requirements.txt
+RUN pip install --prefer-binary -r python/requirements.txt
 RUN apk del .tmp-build-deps
 
 # Copy the current directory contents into the container at /app
 COPY . /app
-COPY auth.json /app/auth.json
+COPY auth.json /app/python/auth.json
 
 # Set the environment here, or add this to your docker-compose.yml
 # ENV IMAGEDIR=/path/to/tmp/images/dir
@@ -23,4 +23,5 @@ COPY auth.json /app/auth.json
 # ENV GOOGLE_APPLICATION_CREDENTIALS=/path/to/auth.json
 
 # Start the bot
+WORKDIR /app/python
 CMD ["python", "wsclient.py"]
