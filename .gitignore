@@ -7,7 +7,7 @@ images
 *.swp
 *.swo
 image.tar
-python/auth.json
-python/messages.db
+*/messages.db
+*/auth.json
 python/prompt_prefix.txt
 python/test_messages.db
