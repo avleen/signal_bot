@@ -240,7 +240,7 @@ func (ctx *AppContext) saveMessage(container map[string]interface{}) {
 	message := container["msgStruct"].(map[string]interface{})["message"]
 	groupId := container["msgStruct"].(map[string]interface{})["groupInfo"].(map[string]interface{})["groupId"]
 
-	query := "INSERT INTO messages (timestamp, source_number, source_name, message, group_id) VALUES (?, ?, ?, ?, ?)"
+	query := "INSERT INTO messages (timestamp, sourceNumber, sourceName, message, groupId) VALUES (?, ?, ?, ?, ?)"
 	args := []interface{}{ts, sourceNumber, sourceName, message, groupId}
 	ctx.DbChan <- dbMessage{query, args}
 }
@@ -257,6 +257,10 @@ func main() {
 		if value == "" {
 			log.Fatalf("Missing environment variable: %s", key)
 		}
+	}
+	// If the database file doesn't exist, panic
+	if _, err := os.Stat(config["STATEDB"]); os.IsNotExist(err) {
+		log.Fatalf("Database file does not exist: %s", config["STATEDB"])
 	}
 
 	// Accept command line arguments with flag:
