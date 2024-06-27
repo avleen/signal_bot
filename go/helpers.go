@@ -25,7 +25,7 @@ func getMessageRoot(message string) map[string]interface{} {
 		}
 	}
 	// Put msgStruct back in the envelope
-	container["envelope"].(map[string]interface{})["msgStruct"] = msgStruct
+	container["msgStruct"] = msgStruct
 	return container
 }
 

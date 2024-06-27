@@ -105,12 +105,13 @@ func (ctx *AppContext) processMessage(message string) {
 	// Get the message root
 	container := getMessageRoot(message)
 	// Pull out a few fields so they're easier to reference
-	msgStruct := container["msgStruct"].(map[string]interface{})
+	msgStruct, _ := container["msgStruct"].(map[string]interface{})
 
-	// If the message does not contains the field groupInfo isn't a real message, return
+	// If the msgStruct does not contains the field groupInfo isn't a real message, return
 	if _, ok := msgStruct["groupInfo"]; !ok {
 		return
 	}
+
 	// Ensure groupInfo contains a groupId. if it does, call encodeGroupIdToBase64()
 	// Otherwise, return
 	if groupId, ok := msgStruct["groupInfo"].(map[string]interface{})["groupId"]; ok {
@@ -233,11 +234,11 @@ func restClient() {
 
 func (ctx *AppContext) saveMessage(container map[string]interface{}) {
 	// Persist the message to the database at config.statedb
-	ts := container["timestamp"]
-	sourceNumber := container["sourceNumber"]
-	sourceName := container["sourceName"]
-	message := container["message"]
-	groupId := container["groupInfo"].(map[string]interface{})["groupId"]
+	ts := container["envelope"].(map[string]interface{})["timestamp"]
+	sourceNumber := container["envelope"].(map[string]interface{})["sourceNumber"]
+	sourceName := container["envelope"].(map[string]interface{})["sourceName"]
+	message := container["msgStruct"].(map[string]interface{})["message"]
+	groupId := container["msgStruct"].(map[string]interface{})["groupInfo"].(map[string]interface{})["groupId"]
 
 	query := "INSERT INTO messages (timestamp, source_number, source_name, message, group_id) VALUES (?, ?, ?, ?, ?)"
 	args := []interface{}{ts, sourceNumber, sourceName, message, groupId}
