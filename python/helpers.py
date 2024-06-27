@@ -27,16 +27,16 @@ def get_message_root(message):
     #       }
     #   },"account":"+<int>"
     # }
-    msg_root = None
+    msg_struct = None
     parsed = json.loads(message)['envelope']
     if 'dataMessage' in parsed:
-        msg_root = parsed['dataMessage']
+        msg_struct = parsed['dataMessage']
     elif 'syncMessage' in parsed:
         try:
-            msg_root = parsed['syncMessage']['sentMessage']
+            msg_struct = parsed['syncMessage']['sentMessage']
         except KeyError:
             return None, None
-    return msg_root, parsed
+    return msg_struct, parsed
 
 def send_message(url, message, number, recipients, attachment=None):
     """Send a message to a Signal recipient or group.
