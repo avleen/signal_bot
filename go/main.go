@@ -37,14 +37,14 @@ var config = map[string]string{
 	"GOOGLE_TEXT_MODEL": os.Getenv("GOOGLE_TEXT_MODEL"),
 }
 
-func (ctx *AppContext) helpCommand(recipients string) {
+func (ctx *AppContext) helpCommand() {
 	// Send a help message to the send channel
 	message := "Available commands:\n" +
 		"!help - Display this help message\n" +
-		"!image <text> - Generate an image\n" +
+		"!imagine <text> - Generate an image\n" +
 		"!summary <num_msgs|12h> - Generate a summary of last N messages, or last H hours\n" +
 		"!ask <question> - Ask a question\n"
-	ctx.sendMessage(message, recipients, "")
+	ctx.sendMessage(message, "")
 }
 
 func (ctx *AppContext) imagineCommand(args []string) {
@@ -86,7 +86,7 @@ func (ctx *AppContext) summaryCommand(hours int, count int, sourceName string) {
 			return
 		}
 	}
-	ctx.SendChan <- summary
+	ctx.sendMessage(summary, "")
 }
 
 func (ctx *AppContext) askCommand(args []string) {
@@ -110,7 +110,7 @@ func (ctx *AppContext) processMessage(message string) {
 	// Ensure groupInfo contains a groupId. if it does, call encodeGroupIdToBase64()
 	// Otherwise, return
 	if groupId, ok := msgStruct["groupInfo"].(map[string]interface{})["groupId"]; ok {
-		msgStruct["groupInfo"].(map[string]interface{})["groupId"] = encodeGroupIdToBase64(groupId.(string))
+		ctx.Recipients = append(ctx.Recipients, encodeGroupIdToBase64(groupId.(string)))
 	} else {
 		return
 	}
@@ -119,7 +119,6 @@ func (ctx *AppContext) processMessage(message string) {
 	ctx.saveMessage(container)
 
 	// This is handy to pull out now, we use it later
-	groupId := msgStruct["groupInfo"].(map[string]interface{})["groupId"].(string)
 	sourceName := container["envelope"].(map[string]interface{})["sourceName"].(string)
 	msgBody := msgStruct["message"].(string)
 
@@ -130,19 +129,19 @@ func (ctx *AppContext) processMessage(message string) {
 		words := strings.Fields(msgBody)
 		switch words[0] {
 		case "!help":
-			ctx.helpCommand(groupId)
+			ctx.helpCommand()
 		case "!imagine":
 			// If words[1:] is empty, call help
 			if len(words) < 2 {
-				ctx.helpCommand(groupId)
+				ctx.helpCommand()
 				return
 			} else {
 				ctx.imagineCommand(words[1:])
 			}
-		case "!summary":
+		case "!newsummary":
 			// If no additional arguments were given, just call for the summary.
 			if len(words) < 2 {
-				ctx.summaryCommand(0, 24, sourceName)
+				ctx.summaryCommand(24, 0, sourceName)
 				return
 			}
 			// If words[1] ends in "h", call summaryCommand with hours
@@ -160,7 +159,7 @@ func (ctx *AppContext) processMessage(message string) {
 		case "!ask":
 			// If words[1:] is empty, call help
 			if len(words) < 2 {
-				ctx.helpCommand(groupId)
+				ctx.helpCommand()
 				return
 			} else {
 				ctx.askCommand(words[1:])
@@ -193,18 +192,6 @@ func (ctx *AppContext) websocketClient() (bool, error) {
 	}
 	log.Println("Connected to WebSocket")
 	defer conn.Close()
-
-	// Start a goroutine to handle outgoing messages
-	go func() {
-		for {
-			message := <-ctx.SendChan
-			err := conn.WriteMessage(websocket.TextMessage, []byte(message))
-			if err != nil {
-				log.Println("Failed to send message to WebSocket:", err)
-				return
-			}
-		}
-	}()
 
 	// Start a goroutine to handle incoming messages
 	go func() {
@@ -296,7 +283,7 @@ func main() {
 		DbQueryChan:        make(chan dbQuery),
 		DbReplySummaryChan: make(chan interface{}),
 		DbReplyAskChan:     make(chan interface{}),
-		SendChan:           make(chan string),
+		Recipients:         []string{},
 	}
 
 	go ctx.dbWorker()

@@ -17,5 +17,5 @@ type AppContext struct {
 	DbQueryChan        chan dbQuery
 	DbReplySummaryChan chan interface{}
 	DbReplyAskChan     chan interface{}
-	SendChan           chan string
+	Recipients         []string
 }

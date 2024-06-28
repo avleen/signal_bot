@@ -130,14 +130,14 @@ func getNumberFromString(number string) (int, error) {
 	return num, nil
 }
 
-func (ctx *AppContext) sendMessage(message string, recipients string, attachment string) {
+func (ctx *AppContext) sendMessage(message string, attachment string) {
 	// If attachment is not nil, it's the path to a file.
 	// Check that the file exists. If it does, read it and base64 encode it.
 	var attachments []string
 	payload := map[string]any{
 		"message":    message,
 		"number":     config["PHONE"],
-		"recipients": []string{recipients},
+		"recipients": ctx.Recipients,
 	}
 
 	if attachment != "" {
