@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"flag"
 	"fmt"
 	"io"
@@ -26,61 +25,26 @@ import (
 //   MAX_AGE: the maximum age of messages to keep
 
 var config = map[string]string{
-	"IMAGEDIR": os.Getenv("IMAGEDIR"),
-	"STATEDB":  os.Getenv("STATEDB"),
-	"PHONE":    os.Getenv("PHONE"),
-	"URL":      os.Getenv("URL"),
-	"REST_URL": os.Getenv("REST_URL"),
-	"MAX_AGE":  os.Getenv("MAX_AGE"),
+	"IMAGEDIR":          os.Getenv("IMAGEDIR"),
+	"STATEDB":           os.Getenv("STATEDB"),
+	"PHONE":             os.Getenv("PHONE"),
+	"URL":               os.Getenv("URL"),
+	"REST_URL":          os.Getenv("REST_URL"),
+	"MAX_AGE":           os.Getenv("MAX_AGE"),
+	"SUMMARY_PROVIDER":  os.Getenv("SUMMARY_PROVIDER"),
+	"LOCATION":          os.Getenv("LOCATION"),
+	"PROJECT_ID":        os.Getenv("PROJECT_ID"),
+	"GOOGLE_TEXT_MODEL": os.Getenv("GOOGLE_TEXT_MODEL"),
 }
 
-type dbMessage struct {
-	query  string
-	values []interface{}
-}
-
-type AppContext struct {
-	DbChan   chan dbMessage
-	SendChan chan string
-}
-
-func (ctx *AppContext) dbWorker() {
-	// Open the database connection
-	db, err := sql.Open("sqlite3", config["STATEDB"])
-	if err != nil {
-		log.Println("Failed to open database:", err)
-		return
-	}
-	defer db.Close()
-
-	// Loop forever, processing messages from the channel
-	for {
-		func() {
-			message := <-ctx.DbChan
-			// Process the message
-			stmt, err := db.Prepare(message.query)
-			if err != nil {
-				log.Println("Failed to prepare statement:", err)
-				return
-			}
-			defer stmt.Close()
-			_, err = stmt.Exec(message.values...)
-			if err != nil {
-				log.Println("Failed to execute statement:", err)
-				return
-			}
-			log.Println("Processing message:", message)
-		}()
-	}
-}
-
-func (ctx *AppContext) helpCommand() {
+func (ctx *AppContext) helpCommand(recipients string) {
 	// Send a help message to the send channel
-	ctx.SendChan <- "Available commands:\n" +
+	message := "Available commands:\n" +
 		"!help - Display this help message\n" +
 		"!image <text> - Generate an image\n" +
 		"!summary <num_msgs|12h> - Generate a summary of last N messages, or last H hours\n" +
 		"!ask <question> - Ask a question\n"
+	ctx.sendMessage(message, recipients, "")
 }
 
 func (ctx *AppContext) imagineCommand(args []string) {
@@ -88,10 +52,41 @@ func (ctx *AppContext) imagineCommand(args []string) {
 	fmt.Println("Generating image from text:", strings.Join(args, " "))
 }
 
-func (ctx *AppContext) summaryCommand(args []string) {
+func (ctx *AppContext) summaryCommand(hours int, count int, sourceName string) {
+	var chatLog string
+	var starttime int
+	var summary string
 	// Generate a summary of the last N messages or last H hours
 	// and send it to the send channel
-	fmt.Println("Generating summary:", strings.Join(args, " "))
+	fmt.Printf("Generating summary for %s: hours: %d, count: %d\n", sourceName, hours, count)
+
+	// Calculate the start time in nanoseconds
+	// Set a default value for hours, if it's zero
+	if hours == 0 {
+		hours, _ = strconv.Atoi(config["MAX_AGE"])
+	}
+	starttime = int(time.Now().Add(-time.Duration(hours)*time.Hour).Unix() * 1000)
+	logLines, err := ctx.fetchLogs(count, starttime)
+	if err != nil {
+		log.Println("Failed to fetch logs:", err)
+		return
+	}
+	// Join all the rows in logLines into a newline separated string
+
+	for logLines.Next() {
+		var line string
+		logLines.Scan(&line)
+		chatLog += line + "\n"
+	}
+	switch config["SUMMARY_PROVIDER"] {
+	case "google":
+		summary, err = summaryGoogle(chatLog)
+		if err != nil {
+			log.Println("Failed to generate summary:", err)
+			return
+		}
+	}
+	ctx.SendChan <- summary
 }
 
 func (ctx *AppContext) askCommand(args []string) {
@@ -123,28 +118,49 @@ func (ctx *AppContext) processMessage(message string) {
 	// Persist the message to the database
 	ctx.saveMessage(container)
 
+	// This is handy to pull out now, we use it later
+	groupId := msgStruct["groupInfo"].(map[string]interface{})["groupId"].(string)
+	sourceName := container["envelope"].(map[string]interface{})["sourceName"].(string)
+	msgBody := msgStruct["message"].(string)
+
 	// If the first word in the message starts with a !, it's a command.
 	// Take the first word and call the appropriate function with the rest of the message
 	// Otherwise, return
-	if message[0] == '!' {
-		words := strings.Fields(message)
+	if strings.HasPrefix(msgBody, "!") {
+		words := strings.Fields(msgBody)
 		switch words[0] {
 		case "!help":
-			ctx.helpCommand()
+			ctx.helpCommand(groupId)
 		case "!imagine":
 			// If words[1:] is empty, call help
 			if len(words) < 2 {
-				ctx.helpCommand()
+				ctx.helpCommand(groupId)
 				return
 			} else {
 				ctx.imagineCommand(words[1:])
 			}
 		case "!summary":
-			ctx.summaryCommand(words[1:])
+			// If no additional arguments were given, just call for the summary.
+			if len(words) < 2 {
+				ctx.summaryCommand(0, 24, sourceName)
+				return
+			}
+			// If words[1] ends in "h", call summaryCommand with hours
+			// Otherwise, call summaryCommand with count
+			number, number_err := getNumberFromString(words[1])
+			if number_err != nil {
+				fmt.Println("Error parsing number:", number_err)
+				return
+			}
+			if strings.HasSuffix(words[1], "h") {
+				ctx.summaryCommand(number, 0, sourceName)
+			} else {
+				ctx.summaryCommand(0, number, sourceName)
+			}
 		case "!ask":
 			// If words[1:] is empty, call help
 			if len(words) < 2 {
-				ctx.helpCommand()
+				ctx.helpCommand(groupId)
 				return
 			} else {
 				ctx.askCommand(words[1:])
@@ -163,7 +179,7 @@ func (ctx *AppContext) removeOldMessages() {
 	// Delete messages older than config.max_age from the database
 	query := "DELETE FROM messages WHERE timestamp < ?"
 	args := []interface{}{time.Now().Add(-time.Hour * time.Duration(24*maxAge))}
-	ctx.DbChan <- dbMessage{query, args}
+	ctx.DbQueryChan <- dbQuery{query, args, nil}
 }
 
 func (ctx *AppContext) websocketClient() (bool, error) {
@@ -242,7 +258,7 @@ func (ctx *AppContext) saveMessage(container map[string]interface{}) {
 
 	query := "INSERT INTO messages (timestamp, sourceNumber, sourceName, message, groupId) VALUES (?, ?, ?, ?, ?)"
 	args := []interface{}{ts, sourceNumber, sourceName, message, groupId}
-	ctx.DbChan <- dbMessage{query, args}
+	ctx.DbQueryChan <- dbQuery{query, args, nil}
 }
 
 func main() {
@@ -277,8 +293,10 @@ func main() {
 
 	// Create the application context
 	ctx := AppContext{
-		DbChan:   make(chan dbMessage),
-		SendChan: make(chan string),
+		DbQueryChan:        make(chan dbQuery),
+		DbReplySummaryChan: make(chan interface{}),
+		DbReplyAskChan:     make(chan interface{}),
+		SendChan:           make(chan string),
 	}
 
 	go ctx.dbWorker()

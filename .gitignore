@@ -9,5 +9,5 @@ images
 image.tar
 */messages.db
 */auth.json
-python/prompt_prefix.txt
+*/prompt_*.txt
 python/test_messages.db
