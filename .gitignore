@@ -1,5 +1,5 @@
 .vscode
-common/prompt_summary.txt
+*/prompt_summary.txt
 go/__debug*
 go/llm_signal_bot
 python/venv
