@@ -9,4 +9,3 @@ python/__pycache__
 *.swo
 image.tar
 */auth.json
-*/prompt_*.txt
