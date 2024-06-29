@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -175,12 +176,18 @@ func (ctx *AppContext) sendMessage(message string, attachment string) {
 			log.Println("Failed to find attachment:", err)
 			return
 		}
-		file, err := os.ReadFile(attachment)
+		file, err := os.Open(attachment)
+		if err != nil {
+			log.Println("Failed to open attachment:", err)
+			return
+		}
+		defer file.Close()
+		data, err := io.ReadAll(file)
 		if err != nil {
 			log.Println("Failed to read attachment:", err)
 			return
 		}
-		encodedFile := base64.StdEncoding.EncodeToString(file)
+		encodedFile := base64.StdEncoding.EncodeToString(data)
 		attachments = append(attachments, encodedFile)
 		attachments, err := json.Marshal(attachments)
 		if err != nil {
