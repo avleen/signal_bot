@@ -7,6 +7,6 @@ COPY go/go.mod go/go.sum ./
 RUN go mod download && go mod verify
 
 COPY . .
-RUN go build -v -o /usr/local/bin/app ./...
+RUN go build -v -o /usr/local/bin/app /app/go/main.go
 
 CMD ["app"]
