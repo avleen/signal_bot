@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	openai "github.com/sashabaranov/go-openai"
@@ -49,7 +50,11 @@ func imagineOpenai(prompt string, requestor string) (string, string, error) {
 	// Save the imageData to a file in the format:
 	// <date>-<time>-<requestor>.png
 	filename := fmt.Sprintf("%s-%s-%s.png", time.Now().Format("2006-01-02"), time.Now().Format("15:04:05"), requestor)
-	filename = filepath.Join(config["IMAGEDIR"], filename)
+	filename, err = filepath.Abs(filepath.Join(config["IMAGEDIR"], filename))
+	if err != nil || !strings.HasPrefix(filename, config["IMAGEDIR"]) {
+		fmt.Println("Invalid file name:", err)
+		return "", "", err
+	}
 	file, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
 		fmt.Println("Failed to open file:", err)

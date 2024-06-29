@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -243,8 +244,7 @@ func (ctx *AppContext) saveMessage(container map[string]interface{}, msgStruct m
 	ctx.DbQueryChan <- dbQuery{query, args, nil}
 }
 
-func main() {
-	// Do some start-up validation
+func startupValidator() {
 	// In MAX_AGE is not an int, panic
 	if _, err := strconv.Atoi(config["MAX_AGE"]); err != nil {
 		log.Println("Invalid MAX_AGE:", config["MAX_AGE"], ", defaulting to 168")
@@ -256,10 +256,19 @@ func main() {
 			log.Fatalf("Missing environment variable: %s", key)
 		}
 	}
+	// Ensure that the IMAGEDIR is set to a full path. Using relative paths is not secure.
+	if !filepath.IsAbs(config["IMAGEDIR"]) {
+		log.Fatalf("IMAGEDIR must be an absolute path: %s", config["IMAGEDIR"])
+	}
 	// If the database file doesn't exist, panic
 	if _, err := os.Stat(config["STATEDB"]); os.IsNotExist(err) {
 		log.Fatalf("Database file does not exist: %s", config["STATEDB"])
 	}
+}
+
+func main() {
+	// Do some start-up validation
+	startupValidator()
 
 	// Accept command line arguments with flag:
 	//   -mode: websocket or rest
