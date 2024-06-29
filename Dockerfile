@@ -6,6 +6,7 @@ WORKDIR /app
 COPY go/go.mod go/go.sum ./
 RUN go mod download && go mod verify
 
+COPY auth.json /app/auth.json
 COPY go/. .
 RUN go build -v -o /usr/local/bin/app
 
