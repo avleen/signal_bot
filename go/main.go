@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bufio"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -44,7 +46,7 @@ func (ctx *AppContext) helpCommand() {
 		"!imagine <text> - Generate an image\n" +
 		"!summary <num_msgs|12h> - Generate a summary of last N messages, or last H hours\n" +
 		"!ask <question> - Ask a question\n"
-	ctx.sendMessage(message, "")
+	ctx.MessagePoster(message, "")
 }
 
 func (ctx *AppContext) imagineCommand(args []string) {
@@ -52,41 +54,32 @@ func (ctx *AppContext) imagineCommand(args []string) {
 	fmt.Println("Generating image from text:", strings.Join(args, " "))
 }
 
-func (ctx *AppContext) summaryCommand(hours int, count int, sourceName string) {
-	var chatLog string
-	var starttime int
-	var summary string
-	// Generate a summary of the last N messages or last H hours
-	// and send it to the send channel
-	fmt.Printf("Generating summary for %s: hours: %d, count: %d\n", sourceName, hours, count)
+func (c *TimeCountCalculator) calculateStarttimeAndCount(words []string) (int, int, error) {
+	// Calculates the starttime and message count requested from `words`
 
-	// Calculate the start time in nanoseconds
-	// Set a default value for hours, if it's zero
-	if hours == 0 {
-		hours, _ = strconv.Atoi(config["MAX_AGE"])
+	// c.StartTime is used for testing. If it's -1, set a new default start time.
+	if c.StartTime == -1 {
+		c.StartTime = int(time.Now().Add(-time.Duration(24)*time.Hour).Unix() * 1000)
 	}
-	starttime = int(time.Now().Add(-time.Duration(hours)*time.Hour).Unix() * 1000)
-	logLines, err := ctx.fetchLogs(count, starttime)
+
+	// If no arguments are given, return the default start time and 0 count
+	if len(words) < 2 {
+		return c.StartTime, c.Count, nil
+	}
+
+	// See if the first argument has a number
+	number, err := getNumberFromString(words[1])
 	if err != nil {
-		log.Println("Failed to fetch logs:", err)
-		return
+		// If not, return the default start time and 0 count
+		return 0, 0, errors.New("Invalid argument to summary: " + words[1])
 	}
-	// Join all the rows in logLines into a newline separated string
 
-	for logLines.Next() {
-		var line string
-		logLines.Scan(&line)
-		chatLog += line + "\n"
+	// If the first argument ends in "h", return that many hours as starttime and a zero count
+	if strings.HasSuffix(words[1], "h") {
+		return int(time.Now().Add(-time.Duration(number)*time.Hour).Unix() * 1000), 0, nil
 	}
-	switch config["SUMMARY_PROVIDER"] {
-	case "google":
-		summary, err = summaryGoogle(chatLog)
-		if err != nil {
-			log.Println("Failed to generate summary:", err)
-			return
-		}
-	}
-	ctx.sendMessage(summary, "")
+	// Otherwise, return zero for the start time and the requested count
+	return 0, number, nil
 }
 
 func (ctx *AppContext) askCommand(args []string) {
@@ -98,9 +91,7 @@ func (ctx *AppContext) processMessage(message string) {
 	// Process incoming messages from the WebSocket server
 	log.Println("Received message:", message)
 	// Get the message root
-	container := getMessageRoot(message)
-	// Pull out a few fields so they're easier to reference
-	msgStruct, _ := container["msgStruct"].(map[string]interface{})
+	container, msgStruct := getMessageRoot(message)
 
 	// If the msgStruct does not contains the field groupInfo isn't a real message, return
 	if _, ok := msgStruct["groupInfo"]; !ok {
@@ -116,7 +107,7 @@ func (ctx *AppContext) processMessage(message string) {
 	}
 
 	// Persist the message to the database
-	ctx.saveMessage(container)
+	ctx.saveMessage(container, msgStruct)
 
 	// This is handy to pull out now, we use it later
 	sourceName := container["envelope"].(map[string]interface{})["sourceName"].(string)
@@ -140,22 +131,13 @@ func (ctx *AppContext) processMessage(message string) {
 			}
 		case "!newsummary":
 			// If no additional arguments were given, just call for the summary.
-			if len(words) < 2 {
-				ctx.summaryCommand(24, 0, sourceName)
+			c := TimeCountCalculator{-1, -1}
+			starttime, count, err := c.calculateStarttimeAndCount(words)
+			if err != nil {
+				log.Println("Error parsing hours and count:", err)
 				return
 			}
-			// If words[1] ends in "h", call summaryCommand with hours
-			// Otherwise, call summaryCommand with count
-			number, number_err := getNumberFromString(words[1])
-			if number_err != nil {
-				fmt.Println("Error parsing number:", number_err)
-				return
-			}
-			if strings.HasSuffix(words[1], "h") {
-				ctx.summaryCommand(number, 0, sourceName)
-			} else {
-				ctx.summaryCommand(0, number, sourceName)
-			}
+			ctx.summaryCommand(starttime, count, sourceName)
 		case "!ask":
 			// If words[1:] is empty, call help
 			if len(words) < 2 {
@@ -179,6 +161,64 @@ func (ctx *AppContext) removeOldMessages() {
 	query := "DELETE FROM messages WHERE timestamp < ?"
 	args := []interface{}{time.Now().Add(-time.Hour * time.Duration(24*maxAge))}
 	ctx.DbQueryChan <- dbQuery{query, args, nil}
+}
+
+// StringPrompt asks for a string value using the label
+func StringPrompt(label string) string {
+	var s string
+	r := bufio.NewReader(os.Stdin)
+	for {
+		fmt.Fprint(os.Stderr, label+" ")
+		s, _ = r.ReadString('\n')
+		if s != "" {
+			break
+		}
+	}
+	return strings.TrimSpace(s)
+}
+
+func (ctx *AppContext) debugger() {
+	// Start a debugger session
+	log.Println("Starting debugger session")
+	// A message template to help us test with
+	tpl := `{
+		"envelope":{
+			"source":"+123456789",
+			"sourceNumber":"+123456789",
+			"sourceUuid":"019063e8-9042-72ca-9b66-30a3c83d4489",
+			"sourceName":"Test User",
+			"sourceDevice":1,
+			"timestamp":%v,
+			"syncMessage":{
+				"sentMessage":{
+					"destination":null,
+					"destinationNumber":null,
+					"destinationUuid":null,
+					"timestamp":%v,
+					"message":"%s",
+					"expiresInSeconds":604800,
+					"viewOnce":false,
+					"groupInfo":{
+						"groupId":"VGVzdA==",
+						"type":"DELIVER"
+					}
+				}
+			}
+		},
+		"account":"+123456789"
+	}`
+	for {
+		// Prompt the user for a message
+		request := StringPrompt("Enter a message:")
+		if request == "" {
+			break
+		}
+		// Put the message in the template
+		timeNow := time.Now().Unix() * 1000
+		message := fmt.Sprintf(tpl, timeNow, timeNow, request)
+		// Process the message
+		ctx.processMessage(message)
+	}
 }
 
 func (ctx *AppContext) websocketClient() (bool, error) {
@@ -235,13 +275,13 @@ func restClient() {
 	// ...
 }
 
-func (ctx *AppContext) saveMessage(container map[string]interface{}) {
+func (ctx *AppContext) saveMessage(container map[string]interface{}, msgStruct map[string]interface{}) {
 	// Persist the message to the database at config.statedb
 	ts := container["envelope"].(map[string]interface{})["timestamp"]
 	sourceNumber := container["envelope"].(map[string]interface{})["sourceNumber"]
 	sourceName := container["envelope"].(map[string]interface{})["sourceName"]
-	message := container["msgStruct"].(map[string]interface{})["message"]
-	groupId := container["msgStruct"].(map[string]interface{})["groupInfo"].(map[string]interface{})["groupId"]
+	message := msgStruct["message"]
+	groupId := msgStruct["groupInfo"].(map[string]interface{})["groupId"]
 
 	query := "INSERT INTO messages (timestamp, sourceNumber, sourceName, message, groupId) VALUES (?, ?, ?, ?, ?)"
 	args := []interface{}{ts, sourceNumber, sourceName, message, groupId}
@@ -291,6 +331,7 @@ func main() {
 	// Start the appropriate mode
 	switch *mode {
 	case "websocket":
+		ctx.MessagePoster = ctx.sendMessage
 		// Start the WebSocket client. Retry every 3 seconds on failure.
 		for {
 			_, err := ctx.websocketClient()
@@ -301,6 +342,9 @@ func main() {
 		}
 	case "rest":
 		restClient()
+	case "debugger":
+		ctx.MessagePoster = Printer
+		ctx.debugger()
 	default:
 		log.Fatal("Invalid mode:", *mode)
 	}

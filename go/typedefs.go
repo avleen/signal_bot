@@ -18,4 +18,10 @@ type AppContext struct {
 	DbReplySummaryChan chan interface{}
 	DbReplyAskChan     chan interface{}
 	Recipients         []string
+	MessagePoster      func(string, string)
+}
+
+type TimeCountCalculator struct {
+	StartTime int
+	Count     int
 }

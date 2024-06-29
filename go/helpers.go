@@ -16,7 +16,7 @@ import (
 	"strconv"
 )
 
-func getMessageRoot(message string) map[string]interface{} {
+func getMessageRoot(message string) (map[string]interface{}, map[string]interface{}) {
 	// Parse the message and return the root message object
 
 	var msgStruct map[string]interface{}
@@ -29,12 +29,10 @@ func getMessageRoot(message string) map[string]interface{} {
 		if sentMessage, ok := syncMessage.(map[string]interface{})["sentMessage"]; ok {
 			msgStruct = sentMessage.(map[string]interface{})
 		} else {
-			return nil
+			return nil, nil
 		}
 	}
-	// Put msgStruct back in the envelope
-	container["msgStruct"] = msgStruct
-	return container
+	return container, msgStruct
 }
 
 func encodeGroupIdToBase64(groupId string) string {
@@ -63,6 +61,18 @@ func (ctx *AppContext) dbWorker() {
 				return
 			}
 			defer stmt.Close()
+
+			// If the query is a SELECT, we'll use stmt.Query.
+			// If the query is anything else, we'll use stmt.Exec.
+			if query.replyChan == nil {
+				_, exec_err := stmt.Exec(query.values...)
+				if exec_err != nil {
+					log.Println("Failed to execute statement:", err)
+					return
+				}
+				return
+			}
+
 			rows, query_err := stmt.Query(query.values...)
 			if query_err != nil {
 				log.Println("Failed to execute statement:", err)
@@ -76,7 +86,7 @@ func (ctx *AppContext) dbWorker() {
 	}
 }
 
-func (ctx *AppContext) fetchLogs(count int, starttime int) (*sql.Rows, error) {
+func (ctx *AppContext) fetchLogsFromDB(count int, starttime int) (*sql.Rows, error) {
 	// Fetch logs from the database.
 	// If count is not zero, get that many logs.
 	// Then if starttime is not zero, get logs starting from that time.
@@ -104,6 +114,24 @@ func (ctx *AppContext) fetchLogs(count int, starttime int) (*sql.Rows, error) {
 	} else {
 		return nil, rows.err
 	}
+}
+
+func compileLogs(rows *sql.Rows) (string, error) {
+	// Compile the logs into a string
+	var logs string
+	for rows.Next() {
+		var log string
+		err := rows.Scan(&log)
+		if err != nil {
+			fmt.Println("Failed to scan log:", err)
+			continue
+		}
+		logs += log + "\n"
+	}
+	if logs == "" {
+		return "", errors.New("no logs found")
+	}
+	return logs, nil
 }
 
 func getSummaryPromptFromFile() string {
@@ -179,4 +207,8 @@ func (ctx *AppContext) sendMessage(message string, attachment string) {
 		log.Println("Failed to send message:", err)
 	}
 	defer res.Body.Close()
+}
+
+func Printer(message string, attachment string) {
+	fmt.Println(message)
 }
