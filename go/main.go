@@ -61,7 +61,9 @@ func (ctx *AppContext) processMessage(message string) {
 	}
 
 	// Ensure groupInfo contains a groupId. if it does, call encodeGroupIdToBase64()
+	// Empty out the existing recipients and set it to the new value.
 	// Otherwise, return
+	ctx.Recipients = []string{}
 	if groupId, ok := msgStruct["groupInfo"].(map[string]interface{})["groupId"]; ok {
 		ctx.Recipients = append(ctx.Recipients, encodeGroupIdToBase64(groupId.(string)))
 	} else {

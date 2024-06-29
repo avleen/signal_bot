@@ -163,7 +163,6 @@ func getNumberFromString(number string) (int, error) {
 func (ctx *AppContext) sendMessage(message string, attachment string) {
 	// If attachment is not nil, it's the path to a file.
 	// Check that the file exists. If it does, read it and base64 encode it.
-	var attachments []string
 	payload := map[string]any{
 		"message":    message,
 		"number":     config["PHONE"],
@@ -188,13 +187,7 @@ func (ctx *AppContext) sendMessage(message string, attachment string) {
 			return
 		}
 		encodedFile := base64.StdEncoding.EncodeToString(data)
-		attachments = append(attachments, encodedFile)
-		attachments, err := json.Marshal(attachments)
-		if err != nil {
-			log.Println("Failed to marshal attachments:", err)
-			return
-		}
-		payload["base64_attachments"] = string(attachments)
+		payload["base64_attachments"] = []string{encodedFile}
 	}
 	// Send a HTTP POST to the server at $url with the message in the body
 	body, err := json.Marshal(payload)
