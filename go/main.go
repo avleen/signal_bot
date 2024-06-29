@@ -25,16 +25,18 @@ import (
 //   MAX_AGE: the maximum age of messages to keep
 
 var config = map[string]string{
-	"IMAGEDIR":          os.Getenv("IMAGEDIR"),
-	"STATEDB":           os.Getenv("STATEDB"),
-	"PHONE":             os.Getenv("PHONE"),
-	"URL":               os.Getenv("URL"),
-	"REST_URL":          os.Getenv("REST_URL"),
-	"MAX_AGE":           os.Getenv("MAX_AGE"),
-	"SUMMARY_PROVIDER":  os.Getenv("SUMMARY_PROVIDER"),
-	"LOCATION":          os.Getenv("LOCATION"),
-	"PROJECT_ID":        os.Getenv("PROJECT_ID"),
 	"GOOGLE_TEXT_MODEL": os.Getenv("GOOGLE_TEXT_MODEL"),
+	"IMAGE_PROVIDER":    os.Getenv("IMAGE_PROVIDER"),
+	"IMAGEDIR":          os.Getenv("IMAGEDIR"),
+	"LOCATION":          os.Getenv("LOCATION"),
+	"MAX_AGE":           os.Getenv("MAX_AGE"),
+	"OPENAI_API_KEY":    os.Getenv("OPENAI_API_KEY"),
+	"PHONE":             os.Getenv("PHONE"),
+	"PROJECT_ID":        os.Getenv("PROJECT_ID"),
+	"REST_URL":          os.Getenv("REST_URL"),
+	"STATEDB":           os.Getenv("STATEDB"),
+	"SUMMARY_PROVIDER":  os.Getenv("SUMMARY_PROVIDER"),
+	"URL":               os.Getenv("URL"),
 }
 
 func (ctx *AppContext) helpCommand() {
@@ -87,9 +89,9 @@ func (ctx *AppContext) processMessage(message string) {
 				ctx.helpCommand()
 				return
 			} else {
-				ctx.imagineCommand(words[1:])
+				ctx.imagineCommand(sourceName, strings.Join(words[1:], " "))
 			}
-		case "!newsummary":
+		case "!summary":
 			// If no additional arguments were given, just call for the summary.
 			c := TimeCountCalculator{-1, -1}
 			starttime, count, err := c.calculateStarttimeAndCount(words)
@@ -104,8 +106,7 @@ func (ctx *AppContext) processMessage(message string) {
 				ctx.helpCommand()
 				return
 			} else {
-				prompt := strings.Join(words[1:], " ")
-				ctx.summaryCommand(-1, -1, sourceName, prompt)
+				ctx.summaryCommand(-1, -1, sourceName, strings.Join(words[1:], " "))
 			}
 		}
 	} else {

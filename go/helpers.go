@@ -18,6 +18,15 @@ import (
 	"strings"
 )
 
+func makeOutputDir(dir string) error {
+	// Create the output directory if it doesn't exist
+	err := os.MkdirAll(dir, 0755)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func getMessageRoot(message string) (map[string]interface{}, map[string]interface{}) {
 	// Parse the message and return the root message object
 

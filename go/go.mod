@@ -8,8 +8,6 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.22
 )
 
-require github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
-
 require (
 	cloud.google.com/go v0.114.0 // indirect
 	cloud.google.com/go/aiplatform v1.68.0 // indirect
@@ -26,7 +24,7 @@ require (
 	github.com/google/s2a-go v0.1.7 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.2 // indirect
 	github.com/googleapis/gax-go/v2 v2.12.4 // indirect
-	github.com/manifoldco/promptui v0.9.0
+	github.com/sashabaranov/go-openai v1.26.1
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.49.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.49.0 // indirect
