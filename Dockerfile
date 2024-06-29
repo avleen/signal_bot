@@ -6,7 +6,7 @@ WORKDIR /app
 COPY go/go.mod go/go.sum ./
 RUN go mod download && go mod verify
 
-COPY . .
-RUN go build -v -o /usr/local/bin/app /app/go/main.go
+COPY go/* .
+RUN go build -v -o /usr/local/bin/app
 
 CMD ["app"]
