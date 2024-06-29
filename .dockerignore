@@ -1,6 +1,8 @@
 .git
+*/test_*
 go/__debug*
+go/llm_signal_bot
 python/__pycache__
+python/venv
 .docker_temp_*
 image.tar
-python/venv

@@ -1,13 +1,12 @@
 .vscode
 go/__debug*
+go/llm_signal_bot
 python/venv
 python/__pycache__
-images
+*/test_*
 .docker_temp_*
 *.swp
 *.swo
 image.tar
-*/messages.db
 */auth.json
 */prompt_*.txt
-python/test_messages.db
