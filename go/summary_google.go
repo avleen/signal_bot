@@ -8,7 +8,7 @@ import (
 	"cloud.google.com/go/vertexai/genai"
 )
 
-func summaryGoogle(chatLog string) (string, error) {
+func summaryGoogle(chatLog string, prompt string) (string, error) {
 	// Generate a summary of the chat log using the Google AI API
 	// and send it to the send channel
 	fmt.Println("Generating summary using Google AI API")
@@ -41,7 +41,13 @@ func summaryGoogle(chatLog string) (string, error) {
 			Threshold: genai.HarmBlockOnlyHigh,
 		},
 	}
-	prompt := getSummaryPromptFromFile() + "\n" + chatLog
+
+	// Use the given prompt, or read from a file if not provided
+	if prompt == "" {
+		prompt = getSummaryPromptFromFile() + "\n" + chatLog
+	} else {
+		prompt = prompt + "\n" + chatLog
+	}
 	resp, err := model.GenerateContent(ctx, genai.Text(prompt))
 	if err != nil {
 		return "", fmt.Errorf("error generating content: %w", err)

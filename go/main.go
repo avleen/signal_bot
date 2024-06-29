@@ -1,8 +1,6 @@
 package main
 
 import (
-	"bufio"
-	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -47,44 +45,6 @@ func (ctx *AppContext) helpCommand() {
 		"!summary <num_msgs|12h> - Generate a summary of last N messages, or last H hours\n" +
 		"!ask <question> - Ask a question\n"
 	ctx.MessagePoster(message, "")
-}
-
-func (ctx *AppContext) imagineCommand(args []string) {
-	// Generate an image from the text and send it to the send channel
-	fmt.Println("Generating image from text:", strings.Join(args, " "))
-}
-
-func (c *TimeCountCalculator) calculateStarttimeAndCount(words []string) (int, int, error) {
-	// Calculates the starttime and message count requested from `words`
-
-	// c.StartTime is used for testing. If it's -1, set a new default start time.
-	if c.StartTime == -1 {
-		c.StartTime = int(time.Now().Add(-time.Duration(24)*time.Hour).Unix() * 1000)
-	}
-
-	// If no arguments are given, return the default start time and 0 count
-	if len(words) < 2 {
-		return c.StartTime, c.Count, nil
-	}
-
-	// See if the first argument has a number
-	number, err := getNumberFromString(words[1])
-	if err != nil {
-		// If not, return the default start time and 0 count
-		return 0, 0, errors.New("Invalid argument to summary: " + words[1])
-	}
-
-	// If the first argument ends in "h", return that many hours as starttime and a zero count
-	if strings.HasSuffix(words[1], "h") {
-		return int(time.Now().Add(-time.Duration(number)*time.Hour).Unix() * 1000), 0, nil
-	}
-	// Otherwise, return zero for the start time and the requested count
-	return 0, number, nil
-}
-
-func (ctx *AppContext) askCommand(args []string) {
-	// Ask a question and send it to the send channel
-	fmt.Println("Asking question:", strings.Join(args, " "))
 }
 
 func (ctx *AppContext) processMessage(message string) {
@@ -137,14 +97,15 @@ func (ctx *AppContext) processMessage(message string) {
 				log.Println("Error parsing hours and count:", err)
 				return
 			}
-			ctx.summaryCommand(starttime, count, sourceName)
+			ctx.summaryCommand(starttime, count, sourceName, "")
 		case "!ask":
 			// If words[1:] is empty, call help
 			if len(words) < 2 {
 				ctx.helpCommand()
 				return
 			} else {
-				ctx.askCommand(words[1:])
+				prompt := strings.Join(words[1:], " ")
+				ctx.summaryCommand(-1, -1, sourceName, prompt)
 			}
 		}
 	} else {
@@ -161,20 +122,6 @@ func (ctx *AppContext) removeOldMessages() {
 	query := "DELETE FROM messages WHERE timestamp < ?"
 	args := []interface{}{time.Now().Add(-time.Hour * time.Duration(24*maxAge))}
 	ctx.DbQueryChan <- dbQuery{query, args, nil}
-}
-
-// StringPrompt asks for a string value using the label
-func StringPrompt(label string) string {
-	var s string
-	r := bufio.NewReader(os.Stdin)
-	for {
-		fmt.Fprint(os.Stderr, label+" ")
-		s, _ = r.ReadString('\n')
-		if s != "" {
-			break
-		}
-	}
-	return strings.TrimSpace(s)
 }
 
 func (ctx *AppContext) debugger() {

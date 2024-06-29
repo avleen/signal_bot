@@ -9,7 +9,7 @@ func TestSummaryGoogle(t *testing.T) {
 	chatLog := "This is a chat log."
 	expectedSummary := "This is the summary."
 
-	summary, err := summaryGoogle(chatLog)
+	summary, err := summaryGoogle(chatLog, "")
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}

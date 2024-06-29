@@ -3,6 +3,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"database/sql"
 	"encoding/base64"
@@ -14,6 +15,7 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 func getMessageRoot(message string) (map[string]interface{}, map[string]interface{}) {
@@ -86,15 +88,15 @@ func (ctx *AppContext) dbWorker() {
 	}
 }
 
-func (ctx *AppContext) fetchLogsFromDB(count int, starttime int) (*sql.Rows, error) {
+func (ctx *AppContext) fetchLogsFromDB(starttime int, count int) (*sql.Rows, error) {
 	// Fetch logs from the database.
-	// If count is not zero, get that many logs.
+	// If count is greater than zero, get that many logs.
 	// Then if starttime is not zero, get logs starting from that time.
 	// Return a map of the logs.
 	// If there are no logs, return an empty map.
 	var query string
 	var args []interface{}
-	if count != 0 {
+	if count > 0 {
 		query = "SELECT sourceName || ': ' || message FROM messages ORDER BY timestamp DESC LIMIT ?"
 		args = []interface{}{count}
 	} else if starttime != 0 {
@@ -132,16 +134,6 @@ func compileLogs(rows *sql.Rows) (string, error) {
 		return "", errors.New("no logs found")
 	}
 	return logs, nil
-}
-
-func getSummaryPromptFromFile() string {
-	// Get the prompt from the file
-	prompt, err := os.ReadFile("prompt_summary.txt")
-	if err != nil {
-		log.Println("Failed to read prompt file:", err)
-		return ""
-	}
-	return string(prompt)
 }
 
 func getNumberFromString(number string) (int, error) {
@@ -211,4 +203,18 @@ func (ctx *AppContext) sendMessage(message string, attachment string) {
 
 func Printer(message string, attachment string) {
 	fmt.Println(message)
+}
+
+// StringPrompt asks for a string value using the label
+func StringPrompt(label string) string {
+	var s string
+	r := bufio.NewReader(os.Stdin)
+	for {
+		fmt.Fprint(os.Stderr, label+" ")
+		s, _ = r.ReadString('\n')
+		if s != "" {
+			break
+		}
+	}
+	return strings.TrimSpace(s)
 }
