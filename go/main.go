@@ -55,6 +55,11 @@ func (ctx *AppContext) processMessage(message string) {
 	// Get the message root
 	container, msgStruct := getMessageRoot(message)
 
+	// If there is no message (for example, this is an emoji reaction), return
+	if msgStruct["message"] == nil {
+		return
+	}
+
 	// If the msgStruct does not contains the field groupInfo isn't a real message, return
 	if _, ok := msgStruct["groupInfo"]; !ok {
 		return
