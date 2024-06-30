@@ -129,7 +129,9 @@ func (ctx *AppContext) removeOldMessages() {
 
 	// Delete messages older than config.max_age from the database
 	query := "DELETE FROM messages WHERE timestamp < ?"
-	args := []interface{}{time.Now().Add(-time.Hour * time.Duration(24*maxAge))}
+	maxAgeInNs := time.Hour * time.Duration(maxAge)
+	args := []interface{}{time.Now().Add(-maxAgeInNs)}
+	log.Println("Removing messages older than", maxAge, "hours. Timestamp:", args[0])
 	ctx.DbQueryChan <- dbQuery{query, args, nil}
 }
 
