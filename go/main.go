@@ -294,6 +294,14 @@ func main() {
 
 	go ctx.dbWorker()
 
+	// Start a goroutine that runs cleanup_state every hour
+	go func() {
+		for {
+			ctx.removeOldMessages()
+			time.Sleep(time.Hour)
+		}
+	}()
+
 	// Start the appropriate mode
 	switch *mode {
 	case "websocket":
@@ -314,13 +322,5 @@ func main() {
 	default:
 		log.Fatal("Invalid mode:", *mode)
 	}
-
-	// Start a goroutine that runs cleanup_state every hour
-	go func() {
-		for {
-			ctx.removeOldMessages()
-			time.Sleep(time.Hour)
-		}
-	}()
 
 }
