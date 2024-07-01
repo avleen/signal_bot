@@ -13,6 +13,13 @@ func summaryGoogle(chatLog string, prompt string) (string, error) {
 	// and send it to the send channel
 	fmt.Println("Generating summary using Google AI API")
 
+	// Validate the correct configuration is set
+	for _, key := range []string{"GOOGLE_PROJECT_ID", "GOOGLE_LOCATION", "GOOGLE_TEXT_MODEL"} {
+		if Config[key] == "" {
+			return "", fmt.Errorf("%s is not set", key)
+		}
+	}
+
 	location := Config["LOCATION"]
 	projectID := Config["PROJECT_ID"]
 

@@ -8,6 +8,13 @@ import (
 )
 
 func summaryOpenai(chatLog string, prompt string) (string, error) {
+	// Generate a summary using OpenAI's ChatGPT
+
+	// Validate the correct configuration is set
+	if Config["OPENAI_API_KEY"] == "" {
+		return "", fmt.Errorf("OPENAI_API_KEY is not set")
+	}
+
 	client := openai.NewClient(Config["OPENAI_API_KEY"])
 
 	// Use the given prompt, or read from a file if not provided

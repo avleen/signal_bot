@@ -26,18 +26,22 @@ import (
 //   MAX_AGE: the maximum age of messages to keep
 
 var Config = map[string]string{
+	"IMAGE_PROVIDER":   os.Getenv("IMAGE_PROVIDER"),
+	"IMAGEDIR":         os.Getenv("IMAGEDIR"),
+	"MAX_AGE":          os.Getenv("MAX_AGE"),
+	"PHONE":            os.Getenv("PHONE"),
+	"REST_URL":         os.Getenv("REST_URL"),
+	"STATEDB":          os.Getenv("STATEDB"),
+	"SUMMARY_PROVIDER": os.Getenv("SUMMARY_PROVIDER"),
+	"URL":              os.Getenv("URL"),
+}
+
+// These parameters are situational and depends on the provider requested.
+var optionalConfig = map[string]string{
+	"GOOGLE_PROJECT_ID": os.Getenv("GOOGLE_PROJECT_ID"),
+	"GOOGLE_LOCATION":   os.Getenv("GOOGLE_LOCATION"),
 	"GOOGLE_TEXT_MODEL": os.Getenv("GOOGLE_TEXT_MODEL"),
-	"IMAGE_PROVIDER":    os.Getenv("IMAGE_PROVIDER"),
-	"IMAGEDIR":          os.Getenv("IMAGEDIR"),
-	"LOCATION":          os.Getenv("LOCATION"),
-	"MAX_AGE":           os.Getenv("MAX_AGE"),
 	"OPENAI_API_KEY":    os.Getenv("OPENAI_API_KEY"),
-	"PHONE":             os.Getenv("PHONE"),
-	"PROJECT_ID":        os.Getenv("PROJECT_ID"),
-	"REST_URL":          os.Getenv("REST_URL"),
-	"STATEDB":           os.Getenv("STATEDB"),
-	"SUMMARY_PROVIDER":  os.Getenv("SUMMARY_PROVIDER"),
-	"URL":               os.Getenv("URL"),
 }
 
 func (ctx *AppContext) helpCommand() {
@@ -257,6 +261,10 @@ func startupValidator() {
 		if value == "" {
 			log.Fatalf("Missing environment variable: %s", key)
 		}
+	}
+	// Merge Config and optionalConfig
+	for key, value := range optionalConfig {
+		Config[key] = value
 	}
 	// Ensure that the IMAGEDIR is set to a full path. Using relative paths is not secure.
 	if !filepath.IsAbs(Config["IMAGEDIR"]) {

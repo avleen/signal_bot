@@ -25,9 +25,6 @@ The bot is set up to run in a container. This isn't required but it'll make your
 1. If you want to use OpenAI for LLM actions, you'll need to get an API key.
 If you want to use Google Gemini / Vertex for LLM actions, you'll need to set up a Google Cloud account, set up an account, enable the Vertex API.
 
-Currently the bot is assume you'll be using BOTH services and expects to find keys / credentials for them.
-This will become more flexible in the future.
-
 ## Caveats
 For performance reasons we run `signal-cli-rest-api` in `json-rpc` mode. This receives messages sent to the Signal account in real time. If your bot instance is not running, any incoming messages are lost.
 
