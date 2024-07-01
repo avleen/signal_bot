@@ -42,6 +42,7 @@ var optionalConfig = map[string]string{
 	"GOOGLE_LOCATION":   os.Getenv("GOOGLE_LOCATION"),
 	"GOOGLE_TEXT_MODEL": os.Getenv("GOOGLE_TEXT_MODEL"),
 	"OPENAI_API_KEY":    os.Getenv("OPENAI_API_KEY"),
+	"OPENAI_MODEL":      os.Getenv("OPENAI_MODEL"),
 }
 
 func (ctx *AppContext) helpCommand() {
