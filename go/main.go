@@ -302,17 +302,18 @@ func main() {
 
 	go ctx.dbWorker()
 
-	// Start a goroutine that runs cleanup_state every hour
-	go func() {
-		for {
-			ctx.removeOldMessages()
-			time.Sleep(time.Hour)
-		}
-	}()
-
 	// Start the appropriate mode
 	switch *mode {
 	case "websocket":
+		// Start a goroutine that runs cleanup_state every hour
+		go func() {
+			for {
+				ctx.removeOldMessages()
+				time.Sleep(time.Hour)
+			}
+		}()
+
+		// Set the message poster to the sendMessage function
 		ctx.MessagePoster = ctx.sendMessage
 		// Start the WebSocket client. Retry every 3 seconds on failure.
 		for {
