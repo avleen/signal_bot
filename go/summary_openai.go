@@ -8,7 +8,7 @@ import (
 )
 
 func summaryOpenai(chatLog string, prompt string) (string, error) {
-	client := openai.NewClient(config["OPENAI_API_KEY"])
+	client := openai.NewClient(Config["OPENAI_API_KEY"])
 
 	// Use the given prompt, or read from a file if not provided
 	if prompt == "" {

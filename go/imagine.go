@@ -13,7 +13,7 @@ func (ctx *AppContext) imagineCommand(requestor string, prompt string) {
 	fmt.Printf("Generating image for %s: %s\n", requestor, prompt)
 
 	// Generate the image
-	switch config["IMAGE_PROVIDER"] {
+	switch Config["IMAGE_PROVIDER"] {
 	case "openai":
 		// Generate the image using OpenAI
 		filename, revisedPrompt, err = imagineOpenai(prompt, requestor)

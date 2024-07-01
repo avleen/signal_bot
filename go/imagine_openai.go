@@ -13,9 +13,9 @@ import (
 )
 
 func imagineOpenai(prompt string, requestor string) (string, string, error) {
-	client := openai.NewClient(config["OPENAI_API_KEY"])
+	client := openai.NewClient(Config["OPENAI_API_KEY"])
 
-	err := makeOutputDir(config["IMAGEDIR"])
+	err := makeOutputDir(Config["IMAGEDIR"])
 	if err != nil {
 		fmt.Println("Failed to create output directory:", err)
 		return "", "", err
@@ -50,8 +50,8 @@ func imagineOpenai(prompt string, requestor string) (string, string, error) {
 	// Save the imageData to a file in the format:
 	// <date>-<time>-<requestor>.png
 	filename := fmt.Sprintf("%s-%s-%s.png", time.Now().Format("2006-01-02"), time.Now().Format("15:04:05"), requestor)
-	filename, err = filepath.Abs(filepath.Join(config["IMAGEDIR"], filename))
-	if err != nil || !strings.HasPrefix(filename, config["IMAGEDIR"]) {
+	filename, err = filepath.Abs(filepath.Join(Config["IMAGEDIR"], filename))
+	if err != nil || !strings.HasPrefix(filename, Config["IMAGEDIR"]) {
 		fmt.Println("Invalid file name:", err)
 		return "", "", err
 	}

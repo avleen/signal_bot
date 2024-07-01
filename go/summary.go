@@ -65,7 +65,7 @@ func (ctx *AppContext) summaryCommand(starttime int, count int, sourceName strin
 		return
 	}
 
-	switch config["SUMMARY_PROVIDER"] {
+	switch Config["SUMMARY_PROVIDER"] {
 	case "google":
 		summary, err = summaryGoogle(chatLog, prompt)
 		if err != nil {

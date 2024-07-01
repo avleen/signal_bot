@@ -13,7 +13,7 @@ func TestStartupValidator(t *testing.T) {
 		t.Fatal("Failed to create temporary db file")
 	}
 	defer os.Remove(dbFile.Name())
-	config = map[string]string{
+	Config = map[string]string{
 		"MAX_AGE":           "168",
 		"IMAGEDIR":          "/path/to/images",
 		"STATEDB":           dbFile.Name(),

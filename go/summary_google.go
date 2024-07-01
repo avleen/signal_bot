@@ -13,8 +13,8 @@ func summaryGoogle(chatLog string, prompt string) (string, error) {
 	// and send it to the send channel
 	fmt.Println("Generating summary using Google AI API")
 
-	location := config["LOCATION"]
-	projectID := config["PROJECT_ID"]
+	location := Config["LOCATION"]
+	projectID := Config["PROJECT_ID"]
 
 	ctx := context.Background()
 	client, err := genai.NewClient(ctx, projectID, location)
@@ -22,7 +22,7 @@ func summaryGoogle(chatLog string, prompt string) (string, error) {
 		return "", fmt.Errorf("error creating google vertex client: %w", err)
 	}
 	defer client.Close()
-	model := client.GenerativeModel(config["GOOGLE_TEXT_MODEL"])
+	model := client.GenerativeModel(Config["GOOGLE_TEXT_MODEL"])
 	model.SafetySettings = []*genai.SafetySetting{
 		{
 			Category:  genai.HarmCategoryHarassment,

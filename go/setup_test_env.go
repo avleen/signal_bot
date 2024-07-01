@@ -15,6 +15,6 @@ func setupTestEnv() {
 	}
 
 	for envName, envValue := range test_config {
-		config[envName] = envValue
+		Config[envName] = envValue
 	}
 }

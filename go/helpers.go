@@ -55,7 +55,7 @@ func encodeGroupIdToBase64(groupId string) string {
 
 func (ctx *AppContext) dbWorker() {
 	// Open the database connection
-	db, err := sql.Open("sqlite3", config["STATEDB"])
+	db, err := sql.Open("sqlite3", Config["STATEDB"])
 	if err != nil {
 		log.Println("Failed to open database:", err)
 		return
@@ -165,7 +165,7 @@ func (ctx *AppContext) sendMessage(message string, attachment string) {
 	// Check that the file exists. If it does, read it and base64 encode it.
 	payload := map[string]any{
 		"message":    message,
-		"number":     config["PHONE"],
+		"number":     Config["PHONE"],
 		"recipients": ctx.Recipients,
 	}
 
@@ -196,7 +196,7 @@ func (ctx *AppContext) sendMessage(message string, attachment string) {
 		return
 	}
 	request, err := http.NewRequest("POST",
-		"http://"+config["URL"]+"/v2/send",
+		"http://"+Config["URL"]+"/v2/send",
 		bytes.NewBuffer(body))
 	if err != nil {
 		log.Println("Failed to send message:", err)

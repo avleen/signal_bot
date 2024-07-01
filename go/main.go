@@ -25,7 +25,7 @@ import (
 //   REST_URL: the URL of the REST API server
 //   MAX_AGE: the maximum age of messages to keep
 
-var config = map[string]string{
+var Config = map[string]string{
 	"GOOGLE_TEXT_MODEL": os.Getenv("GOOGLE_TEXT_MODEL"),
 	"IMAGE_PROVIDER":    os.Getenv("IMAGE_PROVIDER"),
 	"IMAGEDIR":          os.Getenv("IMAGEDIR"),
@@ -125,7 +125,7 @@ func (ctx *AppContext) processMessage(message string) {
 func (ctx *AppContext) removeOldMessages() {
 	// Convert the value of config.MAX_AGE into an int
 	// We don't check for the err because we validated this in main()
-	maxAge, _ := strconv.Atoi(config["MAX_AGE"])
+	maxAge, _ := strconv.Atoi(Config["MAX_AGE"])
 
 	// Delete messages older than config.max_age from the database
 	query := "DELETE FROM messages WHERE timestamp < ?"
@@ -182,7 +182,7 @@ func (ctx *AppContext) debugger() {
 func (ctx *AppContext) websocketClient() (bool, error) {
 	// Establish a WebSocket connection.
 	// Return nothing on success, or an error if the connection fails.
-	conn, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf("ws://%s/v1/receive/%s", config["URL"], config["PHONE"]), nil)
+	conn, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf("ws://%s/v1/receive/%s", Config["URL"], Config["PHONE"]), nil)
 	if err != nil {
 		log.Println("Failed to connect to WebSocket:", err)
 		// Return an error
@@ -213,7 +213,7 @@ func restClient() {
 	// http://{config.rest_url}/v1/receive/{config.phone}
 	// Print them to the console and then persist them to the database
 
-	url := fmt.Sprintf("%s/v1/receive/%s", config["REST_URL"], config["PHONE"])
+	url := fmt.Sprintf("%s/v1/receive/%s", Config["REST_URL"], Config["PHONE"])
 	resp, err := http.Get(url)
 	if err != nil {
 		log.Println("Failed to make HTTP GET request:", err)
@@ -248,23 +248,23 @@ func (ctx *AppContext) saveMessage(container map[string]interface{}, msgStruct m
 
 func startupValidator() {
 	// In MAX_AGE is not an int, panic
-	if _, err := strconv.Atoi(config["MAX_AGE"]); err != nil {
-		log.Println("Invalid MAX_AGE:", config["MAX_AGE"], ", defaulting to 168")
-		config["MAX_AGE"] = "168"
+	if _, err := strconv.Atoi(Config["MAX_AGE"]); err != nil {
+		log.Println("Invalid MAX_AGE:", Config["MAX_AGE"], ", defaulting to 168")
+		Config["MAX_AGE"] = "168"
 	}
 	// For each of the required environment variables, if it is empty, panic
-	for key, value := range config {
+	for key, value := range Config {
 		if value == "" {
 			log.Fatalf("Missing environment variable: %s", key)
 		}
 	}
 	// Ensure that the IMAGEDIR is set to a full path. Using relative paths is not secure.
-	if !filepath.IsAbs(config["IMAGEDIR"]) {
-		log.Fatalf("IMAGEDIR must be an absolute path: %s", config["IMAGEDIR"])
+	if !filepath.IsAbs(Config["IMAGEDIR"]) {
+		log.Fatalf("IMAGEDIR must be an absolute path: %s", Config["IMAGEDIR"])
 	}
 	// If the database file doesn't exist, panic
-	if _, err := os.Stat(config["STATEDB"]); os.IsNotExist(err) {
-		log.Fatalf("Database file does not exist: %s", config["STATEDB"])
+	if _, err := os.Stat(Config["STATEDB"]); os.IsNotExist(err) {
+		log.Fatalf("Database file does not exist: %s", Config["STATEDB"])
 	}
 }
 
