@@ -20,8 +20,8 @@ func summaryGoogle(chatLog string, prompt string) (string, error) {
 		}
 	}
 
-	location := Config["LOCATION"]
-	projectID := Config["PROJECT_ID"]
+	location := Config["GOOGLE_LOCATION"]
+	projectID := Config["GOOGLE_PROJECT_ID"]
 
 	ctx := context.Background()
 	client, err := genai.NewClient(ctx, projectID, location)
