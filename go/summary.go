@@ -72,6 +72,12 @@ func (ctx *AppContext) summaryCommand(starttime int, count int, sourceName strin
 			log.Println("Failed to generate summary:", err)
 			return
 		}
+	case "openai":
+		summary, err = summaryOpenai(chatLog, prompt)
+		if err != nil {
+			log.Println("Failed to generate summary:", err)
+			return
+		}
 	case "debug":
 		summary = fmt.Sprintf("DEBUG: Requested %d starttime, %d message count\n"+
 			"Chat log: %s", starttime, count, chatLog)
