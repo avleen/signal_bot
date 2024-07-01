@@ -45,6 +45,5 @@ func summaryOpenai(chatLog string, prompt string) (string, error) {
 		return "", err
 	}
 
-	fmt.Println(resp.Choices[0].Message.Content)
 	return resp.Choices[0].Message.Content, nil
 }
