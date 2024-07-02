@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 
+	_ "net/http/pprof"
+
 	"github.com/gorilla/websocket"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -43,6 +45,7 @@ var optionalConfig = map[string]string{
 	"GOOGLE_TEXT_MODEL": os.Getenv("GOOGLE_TEXT_MODEL"),
 	"OPENAI_API_KEY":    os.Getenv("OPENAI_API_KEY"),
 	"OPENAI_MODEL":      os.Getenv("OPENAI_MODEL"),
+	"PPROF_PORT":        os.Getenv("PPROF_PORT"),
 }
 
 func (ctx *AppContext) helpCommand() {
@@ -286,8 +289,15 @@ func main() {
 	//   -debug: enable debug logging
 	mode := flag.String("mode", "websocket", "start mode: websocket or rest")
 	debugflag := flag.Bool("debug", false, "enable debug logging")
+	pprofFlag := flag.Bool("pprof", false, "enable pprof")
 	flag.Parse()
 
+	// Enable pprof if -pprof was used, OR if PPROF_PORT is set
+	if *pprofFlag || Config["PPROF_PORT"] != "" {
+		go func() {
+			log.Println(http.ListenAndServe("localhost:"+Config["PPROF_PORT"], nil))
+		}()
+	}
 	// Enable debug logging if requested
 	if *debugflag {
 		log.SetFlags(log.LstdFlags | log.Lshortfile)
