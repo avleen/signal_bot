@@ -26,6 +26,7 @@ func (ctx *AppContext) imagineCommand(requestor string, prompt string) {
 		filename, revisedPrompt, err = imagineGoogle(prompt, requestor)
 		if err != nil {
 			log.Println("Failed to generate image:", err)
+			ctx.MessagePoster("Failed to generate image: "+err.Error(), "")
 			return
 		}
 	}
