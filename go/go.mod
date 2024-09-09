@@ -5,7 +5,7 @@ go 1.22.4
 require (
 	cloud.google.com/go/vertexai v0.12.0
 	github.com/gorilla/websocket v1.5.3
-	github.com/mattn/go-sqlite3 v1.14.22
+	github.com/mattn/go-sqlite3 v1.14.23
 )
 
 require (
