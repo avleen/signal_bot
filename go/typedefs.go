@@ -1,6 +1,9 @@
 package main
 
-import "database/sql"
+import (
+	"context"
+	"database/sql"
+)
 
 type dbQuery struct {
 	query     string
@@ -19,6 +22,7 @@ type AppContext struct {
 	DbReplyAskChan     chan interface{}
 	Recipients         []string
 	MessagePoster      func(string, string)
+	TraceContext       context.Context
 }
 
 type TimeCountCalculator struct {

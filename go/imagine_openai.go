@@ -10,9 +10,17 @@ import (
 	"time"
 
 	openai "github.com/sashabaranov/go-openai"
+	"go.opentelemetry.io/otel"
 )
 
-func imagineOpenai(prompt string, requestor string) (string, string, error) {
+func (ctx *AppContext) imagineOpenai(prompt string, requestor string) (string, string, error) {
+	// Start a new span. During testing ctx.TraceContext may be nil so we need to check for that.
+	if ctx.TraceContext == nil {
+		ctx.TraceContext = context.Background()
+	}
+	tracer := otel.Tracer("signal-bot")
+	_, span := tracer.Start(ctx.TraceContext, "summaryGoogle")
+	defer span.End()
 	client := openai.NewClient(Config["OPENAI_API_KEY"])
 
 	err := makeOutputDir(Config["IMAGEDIR"])

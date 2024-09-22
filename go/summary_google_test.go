@@ -6,9 +6,10 @@ import (
 
 func TestSummaryGoogle(t *testing.T) {
 	setupTestEnv()
+	ctx := &AppContext{}
 	chatLog := "This is a chat log."
 
-	summary, err := summaryGoogle(chatLog, "")
+	summary, err := ctx.summaryGoogle(chatLog, "")
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}

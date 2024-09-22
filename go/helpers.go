@@ -17,6 +17,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"go.opentelemetry.io/otel"
 )
 
 func makeOutputDir(dir string) error {
@@ -161,6 +163,11 @@ func getNumberFromString(number string) (int, error) {
 }
 
 func (ctx *AppContext) sendMessage(message string, attachment string) {
+	// Start a new span
+	tracer := otel.Tracer("signal-bot")
+	_, span := tracer.Start(ctx.TraceContext, "sendMessage")
+	defer span.End()
+
 	// If attachment is not nil, it's the path to a file.
 	// Check that the file exists. If it does, read it and base64 encode it.
 	payload := map[string]any{

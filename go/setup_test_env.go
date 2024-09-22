@@ -9,8 +9,8 @@ func setupTestEnv() {
 		"REST_URL":          "http://localhost:8080",
 		"MAX_AGE":           "168",
 		"SUMMARY_PROVIDER":  "google",
-		"LOCATION":          "us-central1",
-		"PROJECT_ID":        "tmp-k8s-tutorial",
+		"GOOGLE_LOCATION":   "us-central1",
+		"GOOGLE_PROJECT_ID": "tmp-k8s-tutorial",
 		"GOOGLE_TEXT_MODEL": "gemini-1.5-flash-001",
 	}
 

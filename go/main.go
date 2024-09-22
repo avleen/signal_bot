@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"io"
@@ -16,6 +17,12 @@ import (
 
 	"github.com/gorilla/websocket"
 	_ "github.com/mattn/go-sqlite3"
+
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+	"go.opentelemetry.io/otel/sdk/resource"
+	"go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 )
 
 // Get the environment variables from the environment:
@@ -48,6 +55,42 @@ var optionalConfig = map[string]string{
 	"PPROF_PORT":        os.Getenv("PPROF_PORT"),
 }
 
+func initTracer() func() {
+	// Create a new exporter to use on stdout
+	/*
+		exporter, err := stdouttrace.New(stdouttrace.WithPrettyPrint())
+		if err != nil {
+			log.Fatal(err)
+		}
+	*/
+
+	// Create a new exporter to send traces over http
+	ctx := context.Background()
+	exporter, err := otlptracehttp.New(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Create a new tracer provider with the exporter
+	tp := trace.NewTracerProvider(
+		trace.WithBatcher(exporter),
+		trace.WithResource(resource.NewWithAttributes(
+			semconv.SchemaURL,
+			semconv.ServiceNameKey.String("signal-bot"),
+		)),
+	)
+
+	// Set the global tracer provider
+	otel.SetTracerProvider(tp)
+
+	// Return a function to shut down the tracer provider
+	return func() {
+		if err := tp.Shutdown(context.Background()); err != nil {
+			log.Fatal(err)
+		}
+	}
+}
+
 func (ctx *AppContext) helpCommand() {
 	// Send a help message to the send channel
 	message := "Available commands:\n" +
@@ -59,6 +102,10 @@ func (ctx *AppContext) helpCommand() {
 }
 
 func (ctx *AppContext) processMessage(message string) {
+	// Start a new span
+	tracer := otel.Tracer("signal-bot")
+	_, span := tracer.Start(ctx.TraceContext, "processMessage")
+	defer span.End()
 	// Process incoming messages from the WebSocket server
 	log.Println("Received message:", message)
 	// Get the message root
@@ -131,6 +178,11 @@ func (ctx *AppContext) processMessage(message string) {
 }
 
 func (ctx *AppContext) removeOldMessages() {
+	// Start a new span
+	tracer := otel.Tracer("signal-bot")
+	_, span := tracer.Start(ctx.TraceContext, "removeOldMessages")
+	defer span.End()
+
 	// Convert the value of config.MAX_AGE into an int
 	// We don't check for the err because we validated this in main()
 	maxAge, _ := strconv.Atoi(Config["MAX_AGE"])
@@ -174,6 +226,12 @@ func (ctx *AppContext) debugger() {
 		"account":"+123456789"
 	}`
 	for {
+		// Start a new span for each message
+		tracer := otel.Tracer("signal-bot")
+		tracerCtx, span := tracer.Start(ctx.TraceContext, "debugger")
+		defer span.End()
+		ctx.TraceContext = tracerCtx
+
 		// Prompt the user for a message
 		request := StringPrompt("Enter a message:")
 		if request == "" {
@@ -202,6 +260,10 @@ func (ctx *AppContext) websocketClient() (bool, error) {
 	// Start a goroutine to handle incoming messages
 	go func() {
 		for {
+			// Start a new span for each message
+			tracer := otel.Tracer("signal-bot")
+			_, span := tracer.Start(ctx.TraceContext, "websocketClient")
+			defer span.End()
 			_, message, err := conn.ReadMessage()
 			if err != nil {
 				log.Println("Failed to read message from WebSocket:", err)
@@ -242,6 +304,10 @@ func restClient() {
 }
 
 func (ctx *AppContext) saveMessage(container map[string]interface{}, msgStruct map[string]interface{}) {
+	// Start a new span
+	tracer := otel.Tracer("signal-bot")
+	_, span := tracer.Start(ctx.TraceContext, "saveMessage")
+	defer span.End()
 	// Persist the message to the database at config.statedb
 	ts := container["envelope"].(map[string]interface{})["timestamp"]
 	sourceNumber := container["envelope"].(map[string]interface{})["sourceNumber"]
@@ -284,6 +350,11 @@ func main() {
 	// Do some start-up validation
 	startupValidator()
 
+	// Initialize OpenTelemetry for stdout
+	shutdown := initTracer()
+	defer shutdown()
+	tracer := otel.Tracer("signal-bot")
+
 	// Accept command line arguments with flag:
 	//   -mode: websocket or rest
 	//   -debug: enable debug logging
@@ -304,11 +375,14 @@ func main() {
 	}
 
 	// Create the application context
+	traceCtx, span := tracer.Start(context.Background(), *mode)
+	defer span.End()
 	ctx := AppContext{
 		DbQueryChan:        make(chan dbQuery),
 		DbReplySummaryChan: make(chan interface{}),
 		DbReplyAskChan:     make(chan interface{}),
 		Recipients:         []string{},
+		TraceContext:       traceCtx,
 	}
 
 	go ctx.dbWorker()
@@ -331,8 +405,8 @@ func main() {
 			_, err := ctx.websocketClient()
 			if err != nil {
 				log.Println("Failed to connect to WebSocket:", err)
+				time.Sleep(3 * time.Second)
 			}
-			time.Sleep(3 * time.Second)
 		}
 	case "rest":
 		restClient()

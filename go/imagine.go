@@ -1,11 +1,22 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
+
+	"go.opentelemetry.io/otel"
 )
 
 func (ctx *AppContext) imagineCommand(requestor string, prompt string) {
+	// Start a new span. During testing ctx.TraceContext may be nil so we need to check for that.
+	if ctx.TraceContext == nil {
+		ctx.TraceContext = context.Background()
+	}
+	tracer := otel.Tracer("signal-bot")
+	_, span := tracer.Start(ctx.TraceContext, "summaryGoogle")
+	defer span.End()
+
 	var filename, revisedPrompt string
 	var err error
 
@@ -16,7 +27,7 @@ func (ctx *AppContext) imagineCommand(requestor string, prompt string) {
 	switch Config["IMAGE_PROVIDER"] {
 	case "openai":
 		// Generate the image using OpenAI
-		filename, revisedPrompt, err = imagineOpenai(prompt, requestor)
+		filename, revisedPrompt, err = ctx.imagineOpenai(prompt, requestor)
 		if err != nil {
 			log.Println("Failed to generate image:", err)
 			return

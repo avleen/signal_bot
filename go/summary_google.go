@@ -6,9 +6,18 @@ import (
 	"strings"
 
 	"cloud.google.com/go/vertexai/genai"
+	"go.opentelemetry.io/otel"
 )
 
-func summaryGoogle(chatLog string, prompt string) (string, error) {
+func (ctx *AppContext) summaryGoogle(chatLog string, prompt string) (string, error) {
+	// Start a new span. During testing ctx.TraceContext may be nil so we need to check for that.
+	if ctx.TraceContext == nil {
+		ctx.TraceContext = context.Background()
+	}
+	tracer := otel.Tracer("signal-bot")
+	_, span := tracer.Start(ctx.TraceContext, "summaryGoogle")
+	defer span.End()
+
 	// Generate a summary of the chat log using the Google AI API
 	// and send it to the send channel
 	fmt.Println("Generating summary using Google AI API")
@@ -23,13 +32,14 @@ func summaryGoogle(chatLog string, prompt string) (string, error) {
 	location := Config["GOOGLE_LOCATION"]
 	projectID := Config["GOOGLE_PROJECT_ID"]
 
-	ctx := context.Background()
-	client, err := genai.NewClient(ctx, projectID, location)
+	summaryCtx := context.Background()
+	client, err := genai.NewClient(summaryCtx, projectID, location)
 	if err != nil {
 		return "", fmt.Errorf("error creating google vertex client: %w", err)
 	}
 	defer client.Close()
 	model := client.GenerativeModel(Config["GOOGLE_TEXT_MODEL"])
+
 	model.SafetySettings = []*genai.SafetySetting{
 		{
 			Category:  genai.HarmCategoryHarassment,
@@ -55,7 +65,7 @@ func summaryGoogle(chatLog string, prompt string) (string, error) {
 	} else {
 		prompt = prompt + "\n" + chatLog
 	}
-	resp, err := model.GenerateContent(ctx, genai.Text(prompt))
+	resp, err := model.GenerateContent(summaryCtx, genai.Text(prompt))
 	if err != nil {
 		return "", fmt.Errorf("error generating content: %w", err)
 	}

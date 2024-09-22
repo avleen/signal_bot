@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"go.opentelemetry.io/otel"
 )
 
 func getSummaryPromptFromFile() string {
@@ -48,6 +50,11 @@ func (c *TimeCountCalculator) calculateStarttimeAndCount(words []string) (int, i
 }
 
 func (ctx *AppContext) summaryCommand(starttime int, count int, sourceName string, prompt string) {
+	// Start a new span
+	tracer := otel.Tracer("signal-bot")
+	_, span := tracer.Start(ctx.TraceContext, "summaryCommand")
+	defer span.End()
+
 	var summary string
 	// Generate a summary of the last N messages or last H hours
 	// and send it to the send channel
@@ -67,7 +74,7 @@ func (ctx *AppContext) summaryCommand(starttime int, count int, sourceName strin
 
 	switch Config["SUMMARY_PROVIDER"] {
 	case "google":
-		summary, err = summaryGoogle(chatLog, prompt)
+		summary, err = ctx.summaryGoogle(chatLog, prompt)
 		if err != nil {
 			log.Println("Failed to generate summary:", err)
 			return
