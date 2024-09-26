@@ -218,7 +218,8 @@ func (ctx *AppContext) sendMessage(message string, attachment string) {
 }
 
 func Printer(message string, attachment string) {
-	fmt.Println(message)
+	fmt.Println("RESPONSE: " + message)
+	fmt.Println("ATTACHMENT: " + attachment)
 }
 
 // StringPrompt asks for a string value using the label
