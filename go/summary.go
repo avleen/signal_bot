@@ -78,12 +78,14 @@ func (ctx *AppContext) summaryCommand(starttime int, count int, sourceName strin
 		summary, err = ctx.summaryGoogle(chatLog, prompt)
 		if err != nil {
 			log.Println("Failed to generate summary:", err)
+			ctx.MessagePoster("Failed to generate summary: "+err.Error(), "")
 			return
 		}
 	case "openai":
 		summary, err = summaryOpenai(chatLog, prompt)
 		if err != nil {
 			log.Println("Failed to generate summary:", err)
+			ctx.MessagePoster("Failed to generate summary: "+err.Error(), "")
 			return
 		}
 	case "debug":
