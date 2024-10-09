@@ -13,7 +13,7 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-func (ctx *AppContext) imagineOpenai(prompt string, requestor string) (string, string, error) {
+func (ctx *AppContext) imagineOpenai(prompt string, requestor string, flavor string) (string, string, error) {
 	// Start a new span. During testing ctx.TraceContext may be nil so we need to check for that.
 	if ctx.TraceContext == nil {
 		ctx.TraceContext = context.Background()
@@ -28,6 +28,22 @@ func (ctx *AppContext) imagineOpenai(prompt string, requestor string) (string, s
 		fmt.Println("Failed to create output directory:", err)
 		return "", "", err
 
+	}
+
+	// Modify the prompt based on the flavor
+	switch flavor {
+	case "!imagine":
+		// No changes needed
+	case "!opine":
+		prompt = "When creating this image, use a style that conveys seriousness and professionalism. " + prompt
+	case "!dream":
+		prompt = "When creating this image, use a style that conveys whimsy and imagination in a dream-like state. " + prompt
+	case "!nightmare":
+		prompt = "When creating this image, use a style that conveys fear and horror in a nightmare-like state. " + prompt
+	case "!hallucinate":
+		prompt = "When creating this image, use a style that conveys a hallucination-like state. " + prompt
+	case "!trip":
+		prompt = "When creating this image, use a style that conveys a psychedelic trip-like state. " + prompt
 	}
 
 	// Generate an image from the text and send it

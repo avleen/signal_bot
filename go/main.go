@@ -95,7 +95,7 @@ func (ctx *AppContext) helpCommand() {
 	// Send a help message to the send channel
 	message := "Available commands:\n" +
 		"!help - Display this help message\n" +
-		"!imagine <text> - Generate an image\n" +
+		"!imagine <text> - Generate an image (other options: !opine, !dream, !nightmare, !hallucinate, !trip)\n" +
 		"!summary <num_msgs|12h> - Generate a summary of last N messages, or last H hours\n" +
 		"!ask <question> - Ask a question\n"
 	ctx.MessagePoster(message, "")
@@ -146,13 +146,13 @@ func (ctx *AppContext) processMessage(message string) {
 		switch words[0] {
 		case "!help":
 			ctx.helpCommand()
-		case "!imagine":
+		case "!imagine", "!opine", "!dream", "!nightmare", "!hallucinate", "!trip":
 			// If words[1:] is empty, call help
 			if len(words) < 2 {
 				ctx.helpCommand()
 				return
 			} else {
-				ctx.imagineCommand(sourceName, strings.Join(words[1:], " "))
+				ctx.imagineCommand(sourceName, strings.Join(words[1:], " "), words[0])
 			}
 		case "!summary":
 			// If no additional arguments were given, just call for the summary.
