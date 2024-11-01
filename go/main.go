@@ -21,8 +21,9 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	"go.opentelemetry.io/otel/sdk/resource"
-	"go.opentelemetry.io/otel/sdk/trace"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace" // Use the alias here
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Get the environment variables from the environment:
@@ -56,14 +57,6 @@ var optionalConfig = map[string]string{
 }
 
 func initTracer() func() {
-	// Create a new exporter to use on stdout
-	/*
-		exporter, err := stdouttrace.New(stdouttrace.WithPrettyPrint())
-		if err != nil {
-			log.Fatal(err)
-		}
-	*/
-
 	// Create a new exporter to send traces over http
 	ctx := context.Background()
 	exporter, err := otlptracehttp.New(ctx)
@@ -72,9 +65,9 @@ func initTracer() func() {
 	}
 
 	// Create a new tracer provider with the exporter
-	tp := trace.NewTracerProvider(
-		trace.WithBatcher(exporter),
-		trace.WithResource(resource.NewWithAttributes(
+	tp := sdktrace.NewTracerProvider( // Use the alias here
+		sdktrace.WithBatcher(exporter),
+		sdktrace.WithResource(resource.NewWithAttributes(
 			semconv.SchemaURL,
 			semconv.ServiceNameKey.String("signal-bot"),
 		)),
@@ -104,8 +97,9 @@ func (ctx *AppContext) helpCommand() {
 func (ctx *AppContext) processMessage(message string) {
 	// Start a new span
 	tracer := otel.Tracer("signal-bot")
-	_, span := tracer.Start(ctx.TraceContext, "processMessage")
+	tracerCtx, span := tracer.Start(ctx.TraceContext, "processMessage", trace.WithNewRoot())
 	defer span.End()
+	ctx.TraceContext = tracerCtx
 	// Process incoming messages from the WebSocket server
 	log.Println("Received message:", message)
 	// Get the message root
@@ -228,7 +222,7 @@ func (ctx *AppContext) debugger() {
 	for {
 		// Start a new span for each message
 		tracer := otel.Tracer("signal-bot")
-		tracerCtx, span := tracer.Start(ctx.TraceContext, "debugger")
+		tracerCtx, span := tracer.Start(ctx.TraceContext, "debugger", trace.WithNewRoot())
 		defer span.End()
 		ctx.TraceContext = tracerCtx
 

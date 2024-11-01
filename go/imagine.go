@@ -14,7 +14,7 @@ func (ctx *AppContext) imagineCommand(requestor string, prompt string, flavor st
 		ctx.TraceContext = context.Background()
 	}
 	tracer := otel.Tracer("signal-bot")
-	_, span := tracer.Start(ctx.TraceContext, "summaryGoogle")
+	_, span := tracer.Start(ctx.TraceContext, "imagineCommand")
 	defer span.End()
 
 	var filename, revisedPrompt string
