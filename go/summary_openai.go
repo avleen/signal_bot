@@ -44,19 +44,24 @@ func summaryOpenai(chatLog string, prompt string) (string, error) {
 		prompt = prompt + "\n" + chatLog
 	}
 
+	Messages := []openai.ChatCompletionMessage{
+		{
+			Role:    openai.ChatMessageRoleUser,
+			Content: prompt,
+		},
+	}
+	// If we are not using the O1Mini model, we need to add a completion message
+	if modelName != openai.O1Mini {
+		Messages = append(Messages, openai.ChatCompletionMessage{
+			Role:    openai.ChatMessageRoleSystem,
+			Content: "you are a helpful chatbot",
+		})
+	}
+
 	// Talk to ChatGPT to generate a summary
 	req := openai.ChatCompletionRequest{
-		Model: modelName,
-		Messages: []openai.ChatCompletionMessage{
-			{
-				Role:    openai.ChatMessageRoleSystem,
-				Content: "you are a helpful chatbot",
-			},
-			{
-				Role:    openai.ChatMessageRoleUser,
-				Content: prompt,
-			},
-		},
+		Model:    modelName,
+		Messages: Messages,
 	}
 
 	resp, err := client.CreateChatCompletion(context.Background(), req)
