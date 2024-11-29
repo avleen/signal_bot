@@ -26,6 +26,7 @@ func summaryOpenai(chatLog string, prompt string) (string, error) {
 	allowedModels := map[string]string{
 		"GPT3Dot5Turbo": openai.GPT3Dot5Turbo,
 		"GPT4o":         openai.GPT4o,
+		"O1Mini":        openai.O1Mini,
 	}
 	// If modelName is not in the allowedModels map, return an error.
 	// We reuse the existing modelName variable here.

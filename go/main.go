@@ -163,7 +163,9 @@ func (ctx *AppContext) processMessage(message string) {
 				ctx.helpCommand()
 				return
 			} else {
-				ctx.summaryCommand(-1, -1, sourceName, strings.Join(words[1:], " "))
+				prompt := strings.Join(words[1:], " ")
+				prompt = prompt + "\nIf the answer is not provided in the chat log below, ignore the chat log and provide the best answer you can."
+				ctx.summaryCommand(-1, -1, sourceName, prompt)
 			}
 		}
 	} else {
