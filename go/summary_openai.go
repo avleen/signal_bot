@@ -39,9 +39,9 @@ func summaryOpenai(chatLog string, prompt string) (string, error) {
 
 	// Use the given prompt, or read from a file if not provided
 	if prompt == "" {
-		prompt = getSummaryPromptFromFile() + "\n" + chatLog
+		prompt = chatLog + "\n\n'''\n\n" + getSummaryPromptFromFile()
 	} else {
-		prompt = prompt + "\n" + chatLog
+		prompt = chatLog + "\n\n'''\n\n" + prompt
 	}
 
 	Messages := []openai.ChatCompletionMessage{

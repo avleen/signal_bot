@@ -164,7 +164,9 @@ func (ctx *AppContext) processMessage(message string) {
 				return
 			} else {
 				prompt := strings.Join(words[1:], " ")
-				prompt = prompt + "\nTry to use the chat log to answer the question. If the answer is not provided in the chat log below, ignore the chat log and provide the best answer you can. Do not be overly verbose in your answers unless asked. Responses under 1000 chars are preferred."
+				prompt = prompt + "\nTry to use the chat log to answer this question. If the answer is not provided in the chat log above,"
+				prompt = prompt + "ignore the chat log and provide the best answer you can. "
+				prompt = prompt + "Do not be overly verbose in your answers unless asked. Responses under 1000 chars are preferred."
 				ctx.summaryCommand(-1, -1, sourceName, prompt)
 			}
 		}
