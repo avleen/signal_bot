@@ -72,6 +72,8 @@ func (ctx *AppContext) chatOpenai(msgBody string) (string, error) {
 	// in the format Signal uses to pass to saveMessage()
 	// The assistantResponse may have newline characters, so we need to escape them first or the JSON will be invalid.
 	escapedString := strings.ReplaceAll(assistantResponse, "\n", "\\n")
+	// Sometimes the bot name has double quotes around it? Don't know why, but we need to remove them.
+	cleanBotName := strings.ReplaceAll(Config["BOTNAME"], "\"", "")
 	if assistantResponse != "<NO_RESPONSE>" {
 		ts := time.Now().UnixMilli()
 		chatbotMessage := fmt.Sprintf(`{
@@ -88,7 +90,7 @@ func (ctx *AppContext) chatOpenai(msgBody string) (string, error) {
 					}
 				}
 			}
-		}`, Config["PHONE"], Config["BOTNAME"], ts, escapedString, "group.1234567890")
+		}`, Config["PHONE"], cleanBotName, ts, escapedString, "group.1234567890")
 		container, msgStruct, err := getMessageRoot(chatbotMessage)
 		if err != nil {
 			return "", err
