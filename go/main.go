@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
@@ -36,6 +37,8 @@ import (
 //   MAX_AGE: the maximum age of messages to keep
 
 var Config = map[string]string{
+	"BOTNAME":          os.Getenv("BOTNAME"),
+	"CHAT_PROVIDER":    os.Getenv("CHAT_PROVIDER"),
 	"IMAGE_PROVIDER":   os.Getenv("IMAGE_PROVIDER"),
 	"IMAGEDIR":         os.Getenv("IMAGEDIR"),
 	"MAX_AGE":          os.Getenv("MAX_AGE"),
@@ -52,6 +55,7 @@ var optionalConfig = map[string]string{
 	"GOOGLE_LOCATION":   os.Getenv("GOOGLE_LOCATION"),
 	"GOOGLE_TEXT_MODEL": os.Getenv("GOOGLE_TEXT_MODEL"),
 	"OPENAI_API_KEY":    os.Getenv("OPENAI_API_KEY"),
+	"OPENAI_CHAT_MODEL": os.Getenv("OPENAI_CHAT_MODEL"),
 	"OPENAI_MODEL":      os.Getenv("OPENAI_MODEL"),
 	"PPROF_PORT":        os.Getenv("PPROF_PORT"),
 }
@@ -170,6 +174,8 @@ func (ctx *AppContext) processMessage(message string) {
 				ctx.summaryCommand(-1, -1, sourceName, prompt)
 			}
 		}
+	} else if checkIfMentioned(container, msgBody) {
+		ctx.chatCommand(sourceName, msgBody)
 	} else {
 		return
 	}
@@ -211,7 +217,7 @@ func (ctx *AppContext) debugger() {
 					"destinationNumber":null,
 					"destinationUuid":null,
 					"timestamp":%v,
-					"message":"%s",
+					"message":%s,
 					"expiresInSeconds":604800,
 					"viewOnce":false,
 					"groupInfo":{
@@ -237,7 +243,8 @@ func (ctx *AppContext) debugger() {
 		}
 		// Put the message in the template
 		timeNow := time.Now().Unix() * 1000
-		message := fmt.Sprintf(tpl, timeNow, timeNow, request)
+		escapedMessage, _ := json.Marshal(request)
+		message := fmt.Sprintf(tpl, timeNow, timeNow, string(escapedMessage))
 		// Process the message
 		ctx.processMessage(message)
 	}

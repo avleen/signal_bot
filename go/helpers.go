@@ -55,6 +55,31 @@ func encodeGroupIdToBase64(groupId string) string {
 	return fmt.Sprintf("group.%s", groupIdBase64)
 }
 
+func checkIfMentioned(container map[string]interface{}, message string) bool {
+	// Check if the bot was mentioned in the message
+	if dataMessage, ok := container["envelope"].(map[string]interface{})["dataMessage"]; ok {
+		if strings.Contains(
+			strings.ToLower(dataMessage.(map[string]interface{})["message"].(string)),
+			strings.ToLower(Config["BOTNAME"]),
+		) {
+			return true
+		}
+	} else if syncMessage, ok := container["envelope"].(map[string]interface{})["syncMessage"]; ok {
+		if sentMessage, ok := syncMessage.(map[string]interface{})["sentMessage"]; ok {
+			if strings.Contains(
+				strings.ToLower(sentMessage.(map[string]interface{})["message"].(string)),
+				strings.ToLower(Config["BOTNAME"]),
+			) {
+				return true
+			}
+		}
+	}
+	return strings.Contains(
+		strings.ToLower(message),
+		strings.ToLower(Config["BOTNAME"]),
+	)
+}
+
 func (ctx *AppContext) dbWorker() {
 	// Open the database connection
 	db, err := sql.Open("sqlite3", Config["STATEDB"])
@@ -234,4 +259,39 @@ func StringPrompt(label string) string {
 		}
 	}
 	return strings.TrimSpace(s)
+}
+
+// Function to split the summary into chunks less than or equal to maxSummaryLength
+func splitLongMessage(summary string) []string {
+	const maxSummaryLength = 2000
+	var chunks []string
+
+	for len(summary) > maxSummaryLength {
+		// Find the substring from index 0 to maxSummaryLength
+		substring := summary[:maxSummaryLength]
+
+		// Check if the substring ends with a paragraph header
+		re := regexp.MustCompile(`\*\*[\w\d\s]+:\*\*`)
+		matches := re.FindAllStringIndex(substring, -1)
+		if len(matches) > 0 {
+			// Find the index of the start of the most recent paragraph
+			paragraphStart := matches[len(matches)-1][0]
+
+			// If a paragraph start is found, split the summary at that index
+			if paragraphStart > 0 {
+				chunks = append(chunks, substring[:paragraphStart])
+				summary = summary[paragraphStart:]
+				continue
+			}
+		}
+
+		// If no paragraph start is found, split the summary at maxSummaryLength
+		chunks = append(chunks, substring)
+		summary = summary[maxSummaryLength:]
+	}
+
+	// Add the remaining part of the summary as the last chunk
+	chunks = append(chunks, summary)
+
+	return chunks
 }
