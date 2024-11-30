@@ -55,29 +55,44 @@ func encodeGroupIdToBase64(groupId string) string {
 	return fmt.Sprintf("group.%s", groupIdBase64)
 }
 
-func checkIfMentioned(container map[string]interface{}, message string) bool {
-	// Check if the bot was mentioned in the message
+func checkIfMentioned(message string) bool {
+	var container map[string]interface{}
+	json.Unmarshal([]byte(message), &container)
+
 	if dataMessage, ok := container["envelope"].(map[string]interface{})["dataMessage"]; ok {
-		if strings.Contains(
-			strings.ToLower(dataMessage.(map[string]interface{})["message"].(string)),
-			strings.ToLower(Config["BOTNAME"]),
-		) {
-			return true
-		}
-	} else if syncMessage, ok := container["envelope"].(map[string]interface{})["syncMessage"]; ok {
-		if sentMessage, ok := syncMessage.(map[string]interface{})["sentMessage"]; ok {
-			if strings.Contains(
-				strings.ToLower(sentMessage.(map[string]interface{})["message"].(string)),
-				strings.ToLower(Config["BOTNAME"]),
-			) {
+		if msg, ok := dataMessage.(map[string]interface{})["message"]; ok {
+			if strings.Contains(strings.ToLower(msg.(string)), strings.ToLower(Config["BOTNAME"])) {
 				return true
 			}
 		}
+		if mentions, ok := dataMessage.(map[string]interface{})["mentions"]; ok {
+			for _, mention := range mentions.([]interface{}) {
+				mentionMap := mention.(map[string]interface{})
+				if strings.Contains(strings.ToLower(mentionMap["name"].(string)), strings.ToLower(Config["BOTNAME"])) ||
+					mentionMap["number"].(string) == Config["PHONE"] {
+					return true
+				}
+			}
+		}
+	} else if syncMessage, ok := container["envelope"].(map[string]interface{})["syncMessage"]; ok {
+		if sentMessage, ok := syncMessage.(map[string]interface{})["sentMessage"]; ok {
+			if msg, ok := sentMessage.(map[string]interface{})["message"]; ok {
+				if strings.Contains(strings.ToLower(msg.(string)), strings.ToLower(Config["BOTNAME"])) {
+					return true
+				}
+			}
+			if mentions, ok := sentMessage.(map[string]interface{})["mentions"]; ok {
+				for _, mention := range mentions.([]interface{}) {
+					mentionMap := mention.(map[string]interface{})
+					if strings.Contains(strings.ToLower(mentionMap["name"].(string)), strings.ToLower(Config["BOTNAME"])) ||
+						mentionMap["number"].(string) == Config["PHONE"] {
+						return true
+					}
+				}
+			}
+		}
 	}
-	return strings.Contains(
-		strings.ToLower(message),
-		strings.ToLower(Config["BOTNAME"]),
-	)
+	return false
 }
 
 func (ctx *AppContext) dbWorker() {

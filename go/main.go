@@ -174,7 +174,7 @@ func (ctx *AppContext) processMessage(message string) {
 				ctx.summaryCommand(-1, -1, sourceName, prompt)
 			}
 		}
-	} else if checkIfMentioned(container, msgBody) {
+	} else if checkIfMentioned(message) {
 		ctx.chatCommand(sourceName, msgBody)
 	} else {
 		return
