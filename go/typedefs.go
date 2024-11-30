@@ -3,8 +3,6 @@ package main
 import (
 	"context"
 	"database/sql"
-
-	openai "github.com/sashabaranov/go-openai"
 )
 
 type dbQuery struct {
@@ -19,7 +17,6 @@ type dbReply struct {
 }
 
 type AppContext struct {
-	MessageHistory     []openai.ChatCompletionMessage
 	DbQueryChan        chan dbQuery
 	DbReplySummaryChan chan interface{}
 	DbReplyAskChan     chan interface{}

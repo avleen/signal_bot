@@ -19,10 +19,10 @@ func (ctx *AppContext) chatCommand(sourceName string, msgBody string) {
 	// Have a chat with the bot
 	switch Config["CHAT_PROVIDER"] {
 	case "openai":
-		resp, err = ctx.chatOpenai(sourceName, msgBody)
+		resp, err = ctx.chatOpenai(msgBody)
 		if err != nil {
-			log.Println("Failed to generate summary:", err)
-			ctx.MessagePoster("Failed to generate summary: "+err.Error(), "")
+			log.Println("Failed to converse with the bot:", err)
+			ctx.MessagePoster("Failed to converse with the bot: "+err.Error(), "")
 			return
 		}
 	case "debug":

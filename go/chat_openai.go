@@ -3,64 +3,61 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
+	"strings"
+	"time"
 
 	openai "github.com/sashabaranov/go-openai"
 )
 
-func (ctx *AppContext) chatOpenai(sourceName string, msgBody string) (string, error) {
+func (ctx *AppContext) chatOpenai(msgBody string) (string, error) {
 	// Generate a chat response using OpenAI's Chat API
-
-	// Validate the correct configuration is set
-	if Config["OPENAI_API_KEY"] == "" {
-		return "", fmt.Errorf("OPENAI_API_KEY is not set")
+	setup_err := ValidateChatConfig()
+	if setup_err != nil {
+		return "", setup_err
 	}
 
-	// Get the model name, validate that it's set
-	if Config["OPENAI_CHAT_MODEL"] == "" {
-		return "", fmt.Errorf("OPENAI_CHAT_MODEL is not set")
+	modelName, model_err := getChatModelName()
+	if model_err != nil {
+		return "", model_err
 	}
-	modelName := Config["OPENAI_CHAT_MODEL"]
-	// Rather than trying to use reflection magic, we'll map the models we accept.
-	// This mean we'll have to keep this list up to date as OpenAI add more
-	// models but it's not a big lift.
-	allowedModels := map[string]string{
-		"GPT4o":     openai.GPT4o,
-		"GPT4oMini": openai.GPT4oMini,
-	}
-	// If modelName is not in the allowedModels map, return an error.
-	// We reuse the existing modelName variable here.
-	if _, ok := allowedModels[modelName]; !ok {
-		return "", fmt.Errorf("model %s is not supported", modelName)
-	}
-	modelName = allowedModels[modelName]
 
 	client := openai.NewClient(Config["OPENAI_API_KEY"])
 
-	// If ctx.MessageHistory is empty, let's start one with the user's message
-	if len(ctx.MessageHistory) == 0 {
-		// If we are not using the O1Mini model, we need to add a completion message
-		initMsg, err := os.ReadFile("chatbot_init_msg.txt")
-		if err != nil {
-			return "", fmt.Errorf("failed to read initialization message: %v", err)
-		}
-		ctx.MessageHistory = []openai.ChatCompletionMessage{
-			{
-				Role:    openai.ChatMessageRoleSystem,
-				Content: fmt.Sprintf(string(initMsg), Config["BOTNAME"]),
-			},
+	messages, err := ctx.InitChatHistory()
+	if err != nil {
+		return "", err
+	}
+
+	// Get the chatbot history from the database. Iterate over the rows and add them to the chat history.
+	// If the sourceName is the same as the chatbot name, add the message as an assistant message.
+	// Otherwise, add the message as a user message.
+	chatbotHistory := ctx.fetchChatbotHistoryFromDb()
+	for _, row := range chatbotHistory {
+		if row["sourceName"] == Config["BOTNAME"] {
+			messages = append(messages, openai.ChatCompletionMessage{
+				Role:    openai.ChatMessageRoleAssistant,
+				Content: row["message"],
+			})
+		} else {
+			messages = append(messages, openai.ChatCompletionMessage{
+				Role:    openai.ChatMessageRoleUser,
+				Content: fmt.Sprintf("%s: %s", row["sourceName"], row["message"]),
+			})
 		}
 	}
-	ctx.MessageHistory = append(ctx.MessageHistory, openai.ChatCompletionMessage{
+	// Add the user message to the chat history
+	messages = append(messages, openai.ChatCompletionMessage{
 		Role:    openai.ChatMessageRoleUser,
-		Content: sourceName + ": " + msgBody,
+		Content: msgBody,
 	})
 
 	// Talk to ChatGPT to generate a summary
 	req := openai.ChatCompletionRequest{
 		Model:    modelName,
-		Messages: ctx.MessageHistory,
+		Messages: messages,
 	}
+	// Print the request to the console
+	fmt.Printf("ChatCompletion request: %v\n", req)
 
 	resp, err := client.CreateChatCompletion(context.Background(), req)
 	if err != nil {
@@ -69,10 +66,35 @@ func (ctx *AppContext) chatOpenai(sourceName string, msgBody string) (string, er
 	}
 
 	assistantResponse := resp.Choices[0].Message.Content
-	ctx.MessageHistory = append(ctx.MessageHistory, openai.ChatCompletionMessage{
-		Role:    openai.ChatMessageRoleAssistant,
-		Content: assistantResponse,
-	})
+	// If the assistant response was not "<NO_RESPONSE>", add it to the chat history and return it.
+	// Otherwise return an empty string.
+	// In order to save the message, we first need to construct a fake message object with the message content,
+	// in the format Signal uses to pass to saveMessage()
+	// The assistantResponse may have newline characters, so we need to escape them first or the JSON will be invalid.
+	escapedString := strings.ReplaceAll(assistantResponse, "\n", "\\n")
+	if assistantResponse != "<NO_RESPONSE>" {
+		ts := time.Now().UnixMilli()
+		chatbotMessage := fmt.Sprintf(`{
+			"envelope": {
+				"sourceNumber": "%s",
+				"sourceName": "%s",
+				"timestamp": "%d",
+				"syncMessage": {
+				    "sentMessage": {
+						"message": "%s",
+						"groupInfo": {
+							"groupId": "%s"
+						}
+					}
+				}
+			}
+		}`, Config["PHONE"], Config["BOTNAME"], ts, escapedString, "group.1234567890")
+		container, msgStruct, err := getMessageRoot(chatbotMessage)
+		if err != nil {
+			return "", err
+		}
+		ctx.saveMessage(container, msgStruct)
+	}
 
 	return assistantResponse, nil
 }

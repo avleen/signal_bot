@@ -30,12 +30,16 @@ func makeOutputDir(dir string) error {
 	return nil
 }
 
-func getMessageRoot(message string) (map[string]interface{}, map[string]interface{}) {
+func getMessageRoot(message string) (map[string]interface{}, map[string]interface{}, error) {
 	// Parse the message and return the root message object
 
 	var msgStruct map[string]interface{}
 	container := make(map[string]interface{})
-	json.Unmarshal([]byte(message), &container)
+	err := json.Unmarshal([]byte(message), &container)
+	if err != nil {
+		log.Printf("Failed to unmarshal message: %s\n%s\n", message, err)
+		return nil, nil, err
+	}
 
 	if dataMessage, ok := container["envelope"].(map[string]interface{})["dataMessage"]; ok {
 		msgStruct = dataMessage.(map[string]interface{})
@@ -43,56 +47,16 @@ func getMessageRoot(message string) (map[string]interface{}, map[string]interfac
 		if sentMessage, ok := syncMessage.(map[string]interface{})["sentMessage"]; ok {
 			msgStruct = sentMessage.(map[string]interface{})
 		} else {
-			return nil, nil
+			return nil, nil, nil
 		}
 	}
-	return container, msgStruct
+	return container, msgStruct, nil
 }
 
 func encodeGroupIdToBase64(groupId string) string {
 	// Convert the groupId to base64
 	groupIdBase64 := base64.StdEncoding.EncodeToString([]byte(groupId))
 	return fmt.Sprintf("group.%s", groupIdBase64)
-}
-
-func checkIfMentioned(message string) bool {
-	var container map[string]interface{}
-	json.Unmarshal([]byte(message), &container)
-
-	if dataMessage, ok := container["envelope"].(map[string]interface{})["dataMessage"]; ok {
-		if msg, ok := dataMessage.(map[string]interface{})["message"]; ok {
-			if strings.Contains(strings.ToLower(msg.(string)), strings.ToLower(Config["BOTNAME"])) {
-				return true
-			}
-		}
-		if mentions, ok := dataMessage.(map[string]interface{})["mentions"]; ok {
-			for _, mention := range mentions.([]interface{}) {
-				mentionMap := mention.(map[string]interface{})
-				if strings.Contains(strings.ToLower(mentionMap["name"].(string)), strings.ToLower(Config["BOTNAME"])) ||
-					mentionMap["number"].(string) == Config["PHONE"] {
-					return true
-				}
-			}
-		}
-	} else if syncMessage, ok := container["envelope"].(map[string]interface{})["syncMessage"]; ok {
-		if sentMessage, ok := syncMessage.(map[string]interface{})["sentMessage"]; ok {
-			if msg, ok := sentMessage.(map[string]interface{})["message"]; ok {
-				if strings.Contains(strings.ToLower(msg.(string)), strings.ToLower(Config["BOTNAME"])) {
-					return true
-				}
-			}
-			if mentions, ok := sentMessage.(map[string]interface{})["mentions"]; ok {
-				for _, mention := range mentions.([]interface{}) {
-					mentionMap := mention.(map[string]interface{})
-					if strings.Contains(strings.ToLower(mentionMap["name"].(string)), strings.ToLower(Config["BOTNAME"])) ||
-						mentionMap["number"].(string) == Config["PHONE"] {
-						return true
-					}
-				}
-			}
-		}
-	}
-	return false
 }
 
 func (ctx *AppContext) dbWorker() {
@@ -138,6 +102,23 @@ func (ctx *AppContext) dbWorker() {
 			}
 		}()
 	}
+}
+
+func (ctx *AppContext) saveMessage(container map[string]interface{}, msgStruct map[string]interface{}) {
+	// Start a new span
+	tracer := otel.Tracer("signal-bot")
+	_, span := tracer.Start(ctx.TraceContext, "saveMessage")
+	defer span.End()
+	// Persist the message to the database at config.statedb
+	ts := container["envelope"].(map[string]interface{})["timestamp"]
+	sourceNumber := container["envelope"].(map[string]interface{})["sourceNumber"]
+	sourceName := container["envelope"].(map[string]interface{})["sourceName"]
+	message := msgStruct["message"]
+	groupId := msgStruct["groupInfo"].(map[string]interface{})["groupId"]
+
+	query := "INSERT INTO messages (timestamp, sourceNumber, sourceName, message, groupId) VALUES (?, ?, ?, ?, ?)"
+	args := []interface{}{ts, sourceNumber, sourceName, message, groupId}
+	ctx.DbQueryChan <- dbQuery{query, args, nil}
 }
 
 func (ctx *AppContext) fetchLogsFromDB(starttime int, count int) (*sql.Rows, error) {

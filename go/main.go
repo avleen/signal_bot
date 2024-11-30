@@ -107,7 +107,11 @@ func (ctx *AppContext) processMessage(message string) {
 	// Process incoming messages from the WebSocket server
 	log.Println("Received message:", message)
 	// Get the message root
-	container, msgStruct := getMessageRoot(message)
+	container, msgStruct, err := getMessageRoot(message)
+	if err != nil {
+		log.Println("Failed to get message root:", err)
+		return
+	}
 
 	// If there is no message (for example, this is an emoji reaction), return
 	if msgStruct["message"] == nil {
@@ -174,11 +178,9 @@ func (ctx *AppContext) processMessage(message string) {
 				ctx.summaryCommand(-1, -1, sourceName, prompt)
 			}
 		}
-	} else if checkIfMentioned(message) {
-		ctx.chatCommand(sourceName, msgBody)
-	} else {
-		return
 	}
+	// If the message is not a command, call chatCommand to handle the message
+	ctx.chatCommand(sourceName, msgBody)
 }
 
 func (ctx *AppContext) removeOldMessages() {
@@ -308,23 +310,6 @@ func restClient() {
 	// ...
 }
 
-func (ctx *AppContext) saveMessage(container map[string]interface{}, msgStruct map[string]interface{}) {
-	// Start a new span
-	tracer := otel.Tracer("signal-bot")
-	_, span := tracer.Start(ctx.TraceContext, "saveMessage")
-	defer span.End()
-	// Persist the message to the database at config.statedb
-	ts := container["envelope"].(map[string]interface{})["timestamp"]
-	sourceNumber := container["envelope"].(map[string]interface{})["sourceNumber"]
-	sourceName := container["envelope"].(map[string]interface{})["sourceName"]
-	message := msgStruct["message"]
-	groupId := msgStruct["groupInfo"].(map[string]interface{})["groupId"]
-
-	query := "INSERT INTO messages (timestamp, sourceNumber, sourceName, message, groupId) VALUES (?, ?, ?, ?, ?)"
-	args := []interface{}{ts, sourceNumber, sourceName, message, groupId}
-	ctx.DbQueryChan <- dbQuery{query, args, nil}
-}
-
 func startupValidator() {
 	// In MAX_AGE is not an int, panic
 	if _, err := strconv.Atoi(Config["MAX_AGE"]); err != nil {
@@ -382,6 +367,7 @@ func main() {
 	// Create the application context
 	traceCtx, span := tracer.Start(context.Background(), *mode)
 	defer span.End()
+
 	ctx := AppContext{
 		DbQueryChan:        make(chan dbQuery),
 		DbReplySummaryChan: make(chan interface{}),
