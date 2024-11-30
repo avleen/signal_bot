@@ -94,7 +94,7 @@ func (ctx *AppContext) chatOpenai(msgBody string) (string, error) {
 			return "", err
 		}
 		ctx.saveMessage(container, msgStruct)
+		return assistantResponse, nil
 	}
-
-	return assistantResponse, nil
+	return "", nil
 }

@@ -30,8 +30,10 @@ func (ctx *AppContext) chatCommand(sourceName string, msgBody string) {
 	}
 
 	// Split the summary into chunks and call ctx.MessagePoster for each chunk
-	chatChunks := splitLongMessage(resp)
-	for _, chunk := range chatChunks {
-		ctx.MessagePoster(chunk, "")
+	if resp != "" {
+		chatChunks := splitLongMessage(resp)
+		for _, chunk := range chatChunks {
+			ctx.MessagePoster(chunk, "")
+		}
 	}
 }
