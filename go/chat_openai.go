@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 
 	openai "github.com/sashabaranov/go-openai"
 )
@@ -39,17 +40,14 @@ func (ctx *AppContext) chatOpenai(sourceName string, msgBody string) (string, er
 	// If ctx.MessageHistory is empty, let's start one with the user's message
 	if len(ctx.MessageHistory) == 0 {
 		// If we are not using the O1Mini model, we need to add a completion message
+		initMsg, err := os.ReadFile("chatbot_init_msg.txt")
+		if err != nil {
+			return "", fmt.Errorf("failed to read initialization message: %v", err)
+		}
 		ctx.MessageHistory = []openai.ChatCompletionMessage{
 			{
-				Role: openai.ChatMessageRoleSystem,
-				Content: fmt.Sprintf(`Your name is %s.
-You are a bot who is a member of a chat group.
-You do not have to respond to every comment you see.
-You should respond to questions if you have a helpful answer.
-Contribute to the conversation with the other participants.
-Messages start with the name of the speaker.
-If you don't have a helpful reply, just answer with "None",
-Remember and follow the instructions you are given in the chat.`, Config["BOTNAME"]),
+				Role:    openai.ChatMessageRoleSystem,
+				Content: fmt.Sprintf(string(initMsg), Config["BOTNAME"]),
 			},
 		}
 	}
