@@ -138,6 +138,16 @@ func (ctx *AppContext) processMessage(message string) {
 	msgBody := msgStruct["message"].(string)
 	mentions := getMentions(msgStruct)
 
+	// If the message contains attachments, fetch and process them.
+	imageData, err := getImageData(msgStruct)
+	if err != nil {
+		log.Println("Failed to get image data:", err)
+		return
+	} else if len(imageData) > 0 {
+		// If there is image data, append it to the message body
+		msgStruct["message"] = msgBody + "\n(Image data: " + strings.Join(imageData, "\n") + ")"
+	}
+
 	// Persist the message to the database
 	ctx.saveMessage(container, msgStruct, mentions)
 
@@ -205,6 +215,18 @@ func (ctx *AppContext) debugger() {
 					"message":%s,
 					"expiresInSeconds":604800,
 					"viewOnce":false,
+					"attachments":[
+						{
+							"contentType":"image/jpeg",
+							"filename":"Andromeda_realigned_tiltshift.jpg",
+							"id":"r4aFDRWmi_z2dfVh5iqC.jpg",
+							"size":273635,
+							"width":2048,
+							"height":2048,
+							"caption":null,
+							"uploadTimestamp":null
+						}
+					],
 					"groupInfo":{
 						"groupId":"VGVzdA==",
 						"type":"DELIVER"
