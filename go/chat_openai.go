@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -79,25 +80,30 @@ func (ctx *AppContext) chatOpenai(msgBody string, mentions []map[string]string) 
 	// In order to save the message, we first need to construct a fake message object with the message content,
 	// in the format Signal uses to pass to saveMessage()
 	// The assistantResponse may have newline characters, so we need to escape them first or the JSON will be invalid.
-	escapedString := strings.ReplaceAll(assistantResponse, "\n", "\\n")
+	escapedResponse := strings.ReplaceAll(assistantResponse, "\n", "\\n")
 	if assistantResponse != "<NO_RESPONSE>" {
 		ts := time.Now().UnixMilli()
-		chatbotMessage := fmt.Sprintf(`{
-			"envelope": {
-				"sourceNumber": "%s",
-				"sourceName": "%s",
-				"timestamp": "%d",
-				"syncMessage": {
-				    "sentMessage": {
-						"message": "%s",
-						"groupInfo": {
-							"groupId": "%s"
-						}
-					}
-				}
-			}
-		}`, Config["PHONE"], cleanBotName, ts, escapedString, "group.1234567890")
-		container, msgStruct, err := getMessageRoot(chatbotMessage)
+		chatbotMessage := ChatbotMessage{
+			Envelope: Envelope{
+				SourceNumber: Config["PHONE"],
+				SourceName:   cleanBotName,
+				Timestamp:    ts,
+				SyncMessage: SyncMessage{
+					SentMessage: SentMessage{
+						Message: escapedResponse,
+						GroupInfo: GroupInfo{
+							GroupID: "group.1234567890",
+						},
+					},
+				},
+			},
+		}
+		// Marshal the structs to JSON
+		jsonData, err := json.Marshal(chatbotMessage)
+		if err != nil {
+			return "", err
+		}
+		container, msgStruct, err := getMessageRoot(string(jsonData))
 		if err != nil {
 			return "", err
 		}
