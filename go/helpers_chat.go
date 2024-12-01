@@ -52,45 +52,16 @@ func (ctx *AppContext) InitChatHistory() ([]openai.ChatCompletionMessage, error)
 	return messages, nil
 }
 
-/* func checkIfMentioned(message string) bool {
-	var container map[string]interface{}
-	json.Unmarshal([]byte(message), &container)
-
-	if dataMessage, ok := container["envelope"].(map[string]interface{})["dataMessage"]; ok {
-		if msg, ok := dataMessage.(map[string]interface{})["message"]; ok {
-			if strings.Contains(strings.ToLower(msg.(string)), strings.ToLower(Config["BOTNAME"])) {
-				return true
-			}
-		}
-		if mentions, ok := dataMessage.(map[string]interface{})["mentions"]; ok {
-			for _, mention := range mentions.([]interface{}) {
-				mentionMap := mention.(map[string]interface{})
-				if strings.Contains(strings.ToLower(mentionMap["name"].(string)), strings.ToLower(Config["BOTNAME"])) ||
-					mentionMap["number"].(string) == Config["PHONE"] {
-					return true
-				}
-			}
-		}
-	} else if syncMessage, ok := container["envelope"].(map[string]interface{})["syncMessage"]; ok {
-		if sentMessage, ok := syncMessage.(map[string]interface{})["sentMessage"]; ok {
-			if msg, ok := sentMessage.(map[string]interface{})["message"]; ok {
-				if strings.Contains(strings.ToLower(msg.(string)), strings.ToLower(Config["BOTNAME"])) {
-					return true
-				}
-			}
-			if mentions, ok := sentMessage.(map[string]interface{})["mentions"]; ok {
-				for _, mention := range mentions.([]interface{}) {
-					mentionMap := mention.(map[string]interface{})
-					if strings.Contains(strings.ToLower(mentionMap["name"].(string)), strings.ToLower(Config["BOTNAME"])) ||
-						mentionMap["number"].(string) == Config["PHONE"] {
-						return true
-					}
-				}
-			}
+func checkIfMentioned(mentions []map[string]string) bool {
+	for _, mention := range mentions {
+		if mention["name"] == Config["BOTNAME"] {
+			return true
+		} else if mention["number"] == Config["PHONE"] {
+			return true
 		}
 	}
 	return false
-} */
+}
 
 func (ctx *AppContext) fetchChatbotHistoryFromDb() []map[string]string {
 	// Hydrate the chat history from the database

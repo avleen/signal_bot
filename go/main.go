@@ -133,12 +133,13 @@ func (ctx *AppContext) processMessage(message string) {
 		return
 	}
 
-	// Persist the message to the database
-	ctx.saveMessage(container, msgStruct)
-
 	// This is handy to pull out now, we use it later
 	sourceName := container["envelope"].(map[string]interface{})["sourceName"].(string)
 	msgBody := msgStruct["message"].(string)
+	mentions := getMentions(msgStruct)
+
+	// Persist the message to the database
+	ctx.saveMessage(container, msgStruct, mentions)
 
 	// If the first word in the message starts with a !, it's a command.
 	// Take the first word and call the appropriate function with the rest of the message
@@ -180,7 +181,7 @@ func (ctx *AppContext) processMessage(message string) {
 		}
 	}
 	// If the message is not a command, call chatCommand to handle the message
-	ctx.chatCommand(sourceName, msgBody)
+	ctx.chatCommand(sourceName, msgBody, mentions)
 }
 
 func (ctx *AppContext) removeOldMessages() {

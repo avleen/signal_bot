@@ -9,7 +9,7 @@ import (
 	openai "github.com/sashabaranov/go-openai"
 )
 
-func (ctx *AppContext) chatOpenai(msgBody string) (string, error) {
+func (ctx *AppContext) chatOpenai(msgBody string, mentions []map[string]string) (string, error) {
 	// Generate a chat response using OpenAI's Chat API
 	setup_err := ValidateChatConfig()
 	if setup_err != nil {
@@ -26,6 +26,16 @@ func (ctx *AppContext) chatOpenai(msgBody string) (string, error) {
 	messages, err := ctx.InitChatHistory()
 	if err != nil {
 		return "", err
+	}
+
+	// Sometimes the bot name has double quotes around it? Don't know why, but we need to remove them.
+	cleanBotName := strings.ReplaceAll(Config["BOTNAME"], "\"", "")
+
+	// Check if the bot name is mentioned in the message.
+	// If it is, add the bot name to the start of the message.
+	// Add the user message to the chat history
+	if checkIfMentioned(mentions) {
+		msgBody = fmt.Sprintf("%s: %s", cleanBotName, msgBody)
 	}
 
 	// Get the chatbot history from the database. Iterate over the rows and add them to the chat history.
@@ -45,7 +55,7 @@ func (ctx *AppContext) chatOpenai(msgBody string) (string, error) {
 			})
 		}
 	}
-	// Add the user message to the chat history
+
 	messages = append(messages, openai.ChatCompletionMessage{
 		Role:    openai.ChatMessageRoleUser,
 		Content: msgBody,
@@ -56,8 +66,6 @@ func (ctx *AppContext) chatOpenai(msgBody string) (string, error) {
 		Model:    modelName,
 		Messages: messages,
 	}
-	// Print the request to the console
-	fmt.Printf("ChatCompletion request: %v\n", req)
 
 	resp, err := client.CreateChatCompletion(context.Background(), req)
 	if err != nil {
@@ -72,8 +80,6 @@ func (ctx *AppContext) chatOpenai(msgBody string) (string, error) {
 	// in the format Signal uses to pass to saveMessage()
 	// The assistantResponse may have newline characters, so we need to escape them first or the JSON will be invalid.
 	escapedString := strings.ReplaceAll(assistantResponse, "\n", "\\n")
-	// Sometimes the bot name has double quotes around it? Don't know why, but we need to remove them.
-	cleanBotName := strings.ReplaceAll(Config["BOTNAME"], "\"", "")
 	if assistantResponse != "<NO_RESPONSE>" {
 		ts := time.Now().UnixMilli()
 		chatbotMessage := fmt.Sprintf(`{
@@ -95,8 +101,10 @@ func (ctx *AppContext) chatOpenai(msgBody string) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		ctx.saveMessage(container, msgStruct)
+		ctx.saveMessage(container, msgStruct, mentions)
 		return assistantResponse, nil
+	} else {
+		fmt.Printf("Assistant response was %s, not saving it.", assistantResponse)
 	}
 	return "", nil
 }

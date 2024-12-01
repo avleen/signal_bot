@@ -7,7 +7,7 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-func (ctx *AppContext) chatCommand(sourceName string, msgBody string) {
+func (ctx *AppContext) chatCommand(sourceName string, msgBody string, mentions []map[string]string) {
 	// Start a new span
 	tracer := otel.Tracer("signal-bot")
 	_, span := tracer.Start(ctx.TraceContext, "chatCommand")
@@ -19,7 +19,7 @@ func (ctx *AppContext) chatCommand(sourceName string, msgBody string) {
 	// Have a chat with the bot
 	switch Config["CHAT_PROVIDER"] {
 	case "openai":
-		resp, err = ctx.chatOpenai(msgBody)
+		resp, err = ctx.chatOpenai(msgBody, mentions)
 		if err != nil {
 			log.Println("Failed to converse with the bot:", err)
 			ctx.MessagePoster("Failed to converse with the bot: "+err.Error(), "")

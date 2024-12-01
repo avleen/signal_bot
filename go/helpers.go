@@ -53,6 +53,22 @@ func getMessageRoot(message string) (map[string]interface{}, map[string]interfac
 	return container, msgStruct, nil
 }
 
+func getMentions(msgStruct map[string]interface{}) []map[string]string {
+	// Get the mentions from the message. They look like:
+	// "mentions":[{"name":"+13604644445","number":"+13604644445","uuid":"eaf45c04-21ee-4a66-938e-5711e44c5c02","start":0,"length":1}]
+	mentions := make([]map[string]string, 0)
+	if mentionsData, ok := msgStruct["mentions"].([]interface{}); ok {
+		for _, mention := range mentionsData {
+			mentionMap := mention.(map[string]interface{})
+			mentions = append(mentions, map[string]string{
+				"name":   mentionMap["name"].(string),
+				"number": mentionMap["number"].(string),
+			})
+		}
+	}
+	return mentions
+}
+
 func encodeGroupIdToBase64(groupId string) string {
 	// Convert the groupId to base64
 	groupIdBase64 := base64.StdEncoding.EncodeToString([]byte(groupId))
@@ -104,11 +120,18 @@ func (ctx *AppContext) dbWorker() {
 	}
 }
 
-func (ctx *AppContext) saveMessage(container map[string]interface{}, msgStruct map[string]interface{}) {
+func (ctx *AppContext) saveMessage(container map[string]interface{}, msgStruct map[string]interface{}, mentions []map[string]string) {
 	// Start a new span
 	tracer := otel.Tracer("signal-bot")
 	_, span := tracer.Start(ctx.TraceContext, "saveMessage")
 	defer span.End()
+
+	// Marshal the mentions to a string
+	mentionsJson, err := json.Marshal(mentions)
+	if err != nil {
+		log.Println("Failed to marshal mentions:", err)
+		return
+	}
 	// Persist the message to the database at config.statedb
 	ts := container["envelope"].(map[string]interface{})["timestamp"]
 	sourceNumber := container["envelope"].(map[string]interface{})["sourceNumber"]
@@ -116,8 +139,8 @@ func (ctx *AppContext) saveMessage(container map[string]interface{}, msgStruct m
 	message := msgStruct["message"]
 	groupId := msgStruct["groupInfo"].(map[string]interface{})["groupId"]
 
-	query := "INSERT INTO messages (timestamp, sourceNumber, sourceName, message, groupId) VALUES (?, ?, ?, ?, ?)"
-	args := []interface{}{ts, sourceNumber, sourceName, message, groupId}
+	query := "INSERT INTO messages (timestamp, sourceNumber, sourceName, message, groupId, mentions) VALUES (?, ?, ?, ?, ?, ?)"
+	args := []interface{}{ts, sourceNumber, sourceName, message, groupId, string(mentionsJson)}
 	ctx.DbQueryChan <- dbQuery{query, args, nil}
 }
 
