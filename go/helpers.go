@@ -60,6 +60,9 @@ func getMentions(msgStruct map[string]interface{}) []map[string]string {
 	if mentionsData, ok := msgStruct["mentions"].([]interface{}); ok {
 		for _, mention := range mentionsData {
 			mentionMap := mention.(map[string]interface{})
+			if mentionMap["number"] == nil {
+				mentionMap["number"] = mentionMap["name"]
+			}
 			mentions = append(mentions, map[string]string{
 				"name":   mentionMap["name"].(string),
 				"number": mentionMap["number"].(string),
