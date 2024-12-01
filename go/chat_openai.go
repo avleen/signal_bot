@@ -36,7 +36,7 @@ func (ctx *AppContext) chatOpenai(msgBody string, mentions []map[string]string) 
 	// If it is, add the bot name to the start of the message.
 	// Add the user message to the chat history
 	if checkIfMentioned(mentions) {
-		msgBody = fmt.Sprintf("%s: %s", cleanBotName, msgBody)
+		msgBody = fmt.Sprintf("%s, %s", cleanBotName, msgBody)
 	}
 
 	// Get the chatbot history from the database. Iterate over the rows and add them to the chat history.

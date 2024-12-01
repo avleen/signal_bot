@@ -195,13 +195,14 @@ func (ctx *AppContext) processMessage(message string) {
 		}
 	}
 	// If the message is not a command, call chatCommand to handle the message
-	ctx.chatCommand(sourceName, msgBody, mentions)
+	// ctx.chatCommand(sourceName, msgBody, mentions)
 }
 
 func (ctx *AppContext) debugger() {
 	// Start a debugger session
 	log.Println("Starting debugger session")
-	// A message template to help us test with
+	// A message template to help us test with. This isn't great, one day we should
+	// do this with proper types and structures, and then marshal it to JSON.
 	tpl := `{
 		"envelope":{
 			"source":"+123456789",
