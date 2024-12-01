@@ -113,9 +113,13 @@ func (ctx *AppContext) processMessage(message string) {
 		return
 	}
 
-	// If there is no message (for example, this is an emoji reaction), return
-	if msgStruct["message"] == nil {
+	// If there is no message (for example, this is an emoji reaction), and there are no attachments return
+	_, attachmentsOk := msgStruct["attachments"]
+	if msgStruct["message"] == nil && !attachmentsOk {
 		return
+	} else if msgStruct["message"] == nil && attachmentsOk {
+		// If there are attachments, but no message, set the message to "Attachment"
+		msgStruct["message"] = "Uploaded attachment"
 	}
 
 	// If the msgStruct does not contains the field groupInfo isn't a real message, return
