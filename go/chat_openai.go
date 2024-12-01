@@ -110,7 +110,7 @@ func (ctx *AppContext) chatOpenai(msgBody string, mentions []map[string]string) 
 		ctx.saveMessage(container, msgStruct, mentions)
 		return assistantResponse, nil
 	} else {
-		fmt.Printf("Assistant response was %s, not saving it.", assistantResponse)
+		fmt.Printf("Assistant response was %s, not saving it.\n", assistantResponse)
 	}
 	return "", nil
 }
