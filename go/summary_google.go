@@ -15,7 +15,7 @@ func (ctx *AppContext) summaryGoogle(chatLog string, prompt string) (string, err
 		ctx.TraceContext = context.Background()
 	}
 	tracer := otel.Tracer("signal-bot")
-	_, span := tracer.Start(ctx.TraceContext, "summaryGoogle")
+	summaryCtx, span := tracer.Start(ctx.TraceContext, "summaryGoogle")
 	defer span.End()
 
 	// Generate a summary of the chat log using the Google AI API
@@ -32,7 +32,7 @@ func (ctx *AppContext) summaryGoogle(chatLog string, prompt string) (string, err
 	location := Config["GOOGLE_LOCATION"]
 	projectID := Config["GOOGLE_PROJECT_ID"]
 
-	summaryCtx := context.Background()
+	// summaryCtx := context.Background()
 	client, err := genai.NewClient(summaryCtx, projectID, location)
 	if err != nil {
 		return "", fmt.Errorf("error creating google vertex client: %w", err)

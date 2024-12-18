@@ -19,7 +19,7 @@ func (ctx *AppContext) imagineOpenai(prompt string, requestor string, flavor str
 		ctx.TraceContext = context.Background()
 	}
 	tracer := otel.Tracer("signal-bot")
-	_, span := tracer.Start(ctx.TraceContext, "summaryGoogle")
+	_, span := tracer.Start(ctx.TraceContext, "imagineOpenai")
 	defer span.End()
 	client := openai.NewClient(Config["OPENAI_API_KEY"])
 
