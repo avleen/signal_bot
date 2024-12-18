@@ -30,12 +30,16 @@ func makeOutputDir(dir string) error {
 	return nil
 }
 
-func getMessageRoot(message string) (map[string]interface{}, map[string]interface{}) {
+func getMessageRoot(message string) (map[string]interface{}, map[string]interface{}, error) {
 	// Parse the message and return the root message object
 
 	var msgStruct map[string]interface{}
 	container := make(map[string]interface{})
-	json.Unmarshal([]byte(message), &container)
+	err := json.Unmarshal([]byte(message), &container)
+	if err != nil {
+		log.Printf("Failed to unmarshal message: %s\n%s\n", message, err)
+		return nil, nil, err
+	}
 
 	if dataMessage, ok := container["envelope"].(map[string]interface{})["dataMessage"]; ok {
 		msgStruct = dataMessage.(map[string]interface{})
@@ -43,10 +47,29 @@ func getMessageRoot(message string) (map[string]interface{}, map[string]interfac
 		if sentMessage, ok := syncMessage.(map[string]interface{})["sentMessage"]; ok {
 			msgStruct = sentMessage.(map[string]interface{})
 		} else {
-			return nil, nil
+			return nil, nil, nil
 		}
 	}
-	return container, msgStruct
+	return container, msgStruct, nil
+}
+
+func getMentions(msgStruct map[string]interface{}) []map[string]string {
+	// Get the mentions from the message. They look like:
+	// "mentions":[{"name":"+13604644445","number":"+13604644445","uuid":"eaf45c04-21ee-4a66-938e-5711e44c5c02","start":0,"length":1}]
+	mentions := make([]map[string]string, 0)
+	if mentionsData, ok := msgStruct["mentions"].([]interface{}); ok {
+		for _, mention := range mentionsData {
+			mentionMap := mention.(map[string]interface{})
+			if mentionMap["number"] == nil {
+				mentionMap["number"] = mentionMap["name"]
+			}
+			mentions = append(mentions, map[string]string{
+				"name":   mentionMap["name"].(string),
+				"number": mentionMap["number"].(string),
+			})
+		}
+	}
+	return mentions
 }
 
 func encodeGroupIdToBase64(groupId string) string {
@@ -98,6 +121,30 @@ func (ctx *AppContext) dbWorker() {
 			}
 		}()
 	}
+}
+
+func (ctx *AppContext) saveMessage(container map[string]interface{}, msgStruct map[string]interface{}, mentions []map[string]string) {
+	// Start a new span
+	tracer := otel.Tracer("signal-bot")
+	_, span := tracer.Start(ctx.TraceContext, "saveMessage")
+	defer span.End()
+
+	// Marshal the mentions to a string
+	mentionsJson, err := json.Marshal(mentions)
+	if err != nil {
+		log.Println("Failed to marshal mentions:", err)
+		return
+	}
+	// Persist the message to the database at config.statedb
+	ts := container["envelope"].(map[string]interface{})["timestamp"]
+	sourceNumber := container["envelope"].(map[string]interface{})["sourceNumber"]
+	sourceName := container["envelope"].(map[string]interface{})["sourceName"]
+	message := msgStruct["message"]
+	groupId := msgStruct["groupInfo"].(map[string]interface{})["groupId"]
+
+	query := "INSERT INTO messages (timestamp, sourceNumber, sourceName, message, groupId, mentions) VALUES (?, ?, ?, ?, ?, ?)"
+	args := []interface{}{ts, sourceNumber, sourceName, message, groupId, string(mentionsJson)}
+	ctx.DbQueryChan <- dbQuery{query, args, nil}
 }
 
 func (ctx *AppContext) fetchLogsFromDB(starttime int, count int) (*sql.Rows, error) {
@@ -234,4 +281,39 @@ func StringPrompt(label string) string {
 		}
 	}
 	return strings.TrimSpace(s)
+}
+
+// Function to split the summary into chunks less than or equal to maxSummaryLength
+func splitLongMessage(summary string) []string {
+	const maxSummaryLength = 2000
+	var chunks []string
+
+	for len(summary) > maxSummaryLength {
+		// Find the substring from index 0 to maxSummaryLength
+		substring := summary[:maxSummaryLength]
+
+		// Check if the substring ends with a paragraph header
+		re := regexp.MustCompile(`\*\*[\w\d\s]+:\*\*`)
+		matches := re.FindAllStringIndex(substring, -1)
+		if len(matches) > 0 {
+			// Find the index of the start of the most recent paragraph
+			paragraphStart := matches[len(matches)-1][0]
+
+			// If a paragraph start is found, split the summary at that index
+			if paragraphStart > 0 {
+				chunks = append(chunks, substring[:paragraphStart])
+				summary = summary[paragraphStart:]
+				continue
+			}
+		}
+
+		// If no paragraph start is found, split the summary at maxSummaryLength
+		chunks = append(chunks, substring)
+		summary = summary[maxSummaryLength:]
+	}
+
+	// Add the remaining part of the summary as the last chunk
+	chunks = append(chunks, summary)
+
+	return chunks
 }

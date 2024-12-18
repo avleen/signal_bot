@@ -91,3 +91,71 @@ func TestGetNumberFromString(t *testing.T) {
 		t.Errorf("expected error, got nil")
 	}
 }
+
+func TestGetMessageRoot(t *testing.T) {
+	// Define the test data
+	testData := `{
+        "envelope": {
+            "source": "+1234567890",
+            "sourceNumber": "+1234567890",
+            "sourceUuid": "<fake_uuid>",
+            "sourceName": "Test User",
+            "sourceDevice": 1,
+            "timestamp": 1733066028521,
+            "dataMessage": {
+                "timestamp": 1733066028521,
+                "message": "Testing messages",
+                "expiresInSeconds": 0,
+                "viewOnce": false,
+                "attachments": [
+                    {
+                        "contentType": "image/jpeg",
+                        "filename": "galaxy.jpg",
+                        "id": "r4aFDRWmi_z2dfVh5iqC.jpg",
+                        "size": 273635,
+                        "width": 2048,
+                        "height": 2048,
+                        "caption": null,
+                        "uploadTimestamp": null
+                    }
+                ],
+                "groupInfo": {
+                    "groupId": "VGVzdA==",
+                    "type": "DELIVER"
+                }
+            }
+        },
+        "account": "+1234567890"
+    }`
+
+	// Call getMessageRoot with the test data
+	container, msgStruct, err := getMessageRoot(testData)
+	if err != nil {
+		t.Fatalf("getMessageRoot returned an error: %v", err)
+	}
+
+	// Check the container
+	if container == nil {
+		t.Fatalf("Expected container to be non-nil")
+	}
+
+	// Check the msgStruct
+	if msgStruct == nil {
+		t.Fatalf("Expected msgStruct to be non-nil")
+	}
+
+	// Check specific fields in msgStruct
+	expectedMessage := "Testing messages"
+	if msgStruct["message"] != expectedMessage {
+		t.Errorf("Expected message %s, got %s", expectedMessage, msgStruct["message"])
+	}
+
+	expectedGroupId := "VGVzdA=="
+	groupInfo, ok := msgStruct["groupInfo"].(map[string]interface{})
+	if !ok {
+		t.Fatalf("Expected groupInfo to be of type map[string]interface{}")
+	}
+	if groupInfo["groupId"] != expectedGroupId {
+		t.Errorf("Expected groupId %s, got %s", expectedGroupId, groupInfo["groupId"])
+	}
+}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
@@ -21,8 +22,9 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	"go.opentelemetry.io/otel/sdk/resource"
-	"go.opentelemetry.io/otel/sdk/trace"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace" // Use the alias here
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Get the environment variables from the environment:
@@ -35,6 +37,8 @@ import (
 //   MAX_AGE: the maximum age of messages to keep
 
 var Config = map[string]string{
+	"BOTNAME":          os.Getenv("BOTNAME"),
+	"CHAT_PROVIDER":    os.Getenv("CHAT_PROVIDER"),
 	"IMAGE_PROVIDER":   os.Getenv("IMAGE_PROVIDER"),
 	"IMAGEDIR":         os.Getenv("IMAGEDIR"),
 	"MAX_AGE":          os.Getenv("MAX_AGE"),
@@ -51,19 +55,12 @@ var optionalConfig = map[string]string{
 	"GOOGLE_LOCATION":   os.Getenv("GOOGLE_LOCATION"),
 	"GOOGLE_TEXT_MODEL": os.Getenv("GOOGLE_TEXT_MODEL"),
 	"OPENAI_API_KEY":    os.Getenv("OPENAI_API_KEY"),
+	"OPENAI_CHAT_MODEL": os.Getenv("OPENAI_CHAT_MODEL"),
 	"OPENAI_MODEL":      os.Getenv("OPENAI_MODEL"),
 	"PPROF_PORT":        os.Getenv("PPROF_PORT"),
 }
 
 func initTracer() func() {
-	// Create a new exporter to use on stdout
-	/*
-		exporter, err := stdouttrace.New(stdouttrace.WithPrettyPrint())
-		if err != nil {
-			log.Fatal(err)
-		}
-	*/
-
 	// Create a new exporter to send traces over http
 	ctx := context.Background()
 	exporter, err := otlptracehttp.New(ctx)
@@ -72,9 +69,9 @@ func initTracer() func() {
 	}
 
 	// Create a new tracer provider with the exporter
-	tp := trace.NewTracerProvider(
-		trace.WithBatcher(exporter),
-		trace.WithResource(resource.NewWithAttributes(
+	tp := sdktrace.NewTracerProvider( // Use the alias here
+		sdktrace.WithBatcher(exporter),
+		sdktrace.WithResource(resource.NewWithAttributes(
 			semconv.SchemaURL,
 			semconv.ServiceNameKey.String("signal-bot"),
 		)),
@@ -104,16 +101,25 @@ func (ctx *AppContext) helpCommand() {
 func (ctx *AppContext) processMessage(message string) {
 	// Start a new span
 	tracer := otel.Tracer("signal-bot")
-	_, span := tracer.Start(ctx.TraceContext, "processMessage")
+	tracerCtx, span := tracer.Start(ctx.TraceContext, "processMessage", trace.WithNewRoot())
 	defer span.End()
+	ctx.TraceContext = tracerCtx
 	// Process incoming messages from the WebSocket server
 	log.Println("Received message:", message)
 	// Get the message root
-	container, msgStruct := getMessageRoot(message)
-
-	// If there is no message (for example, this is an emoji reaction), return
-	if msgStruct["message"] == nil {
+	container, msgStruct, err := getMessageRoot(message)
+	if err != nil {
+		log.Println("Failed to get message root:", err)
 		return
+	}
+
+	// If there is no message (for example, this is an emoji reaction), and there are no attachments return
+	_, attachmentsOk := msgStruct["attachments"]
+	if msgStruct["message"] == nil && !attachmentsOk {
+		return
+	} else if msgStruct["message"] == nil && attachmentsOk {
+		// If there are attachments, but no message, set the message to "Attachment"
+		msgStruct["message"] = "Uploaded attachment"
 	}
 
 	// If the msgStruct does not contains the field groupInfo isn't a real message, return
@@ -131,12 +137,23 @@ func (ctx *AppContext) processMessage(message string) {
 		return
 	}
 
-	// Persist the message to the database
-	ctx.saveMessage(container, msgStruct)
-
 	// This is handy to pull out now, we use it later
 	sourceName := container["envelope"].(map[string]interface{})["sourceName"].(string)
 	msgBody := msgStruct["message"].(string)
+	mentions := getMentions(msgStruct)
+
+	// If the message contains attachments, fetch and process them.
+	imageData, err := getImageData(msgStruct)
+	if err != nil {
+		log.Println("Failed to get image data:", err)
+		return
+	} else if len(imageData) > 0 {
+		// If there is image data, append it to the message body
+		msgStruct["message"] = msgBody + "\n(Image data: " + strings.Join(imageData, "\n") + ")"
+	}
+
+	// Persist the message to the database
+	ctx.saveMessage(container, msgStruct, mentions)
 
 	// If the first word in the message starts with a !, it's a command.
 	// Take the first word and call the appropriate function with the rest of the message
@@ -169,36 +186,23 @@ func (ctx *AppContext) processMessage(message string) {
 				ctx.helpCommand()
 				return
 			} else {
-				ctx.summaryCommand(-1, -1, sourceName, strings.Join(words[1:], " "))
+				prompt := strings.Join(words[1:], " ")
+				prompt = prompt + "\nTry to use the chat log to answer this question. If the answer is not provided in the chat log above,"
+				prompt = prompt + "ignore the chat log and provide the best answer you can. "
+				prompt = prompt + "Do not be overly verbose in your answers unless asked. Responses under 1000 chars are preferred."
+				ctx.summaryCommand(-1, -1, sourceName, prompt)
 			}
 		}
-	} else {
-		return
 	}
-}
-
-func (ctx *AppContext) removeOldMessages() {
-	// Start a new span
-	tracer := otel.Tracer("signal-bot")
-	_, span := tracer.Start(ctx.TraceContext, "removeOldMessages")
-	defer span.End()
-
-	// Convert the value of config.MAX_AGE into an int
-	// We don't check for the err because we validated this in main()
-	maxAge, _ := strconv.Atoi(Config["MAX_AGE"])
-
-	// Delete messages older than config.max_age from the database
-	query := "DELETE FROM messages WHERE timestamp < ?"
-	maxAgeInNs := time.Hour * time.Duration(maxAge)
-	args := []interface{}{time.Now().Add(-maxAgeInNs).Unix() * 1000}
-	log.Println("Removing messages older than", maxAge, "hours. Timestamp:", args[0])
-	ctx.DbQueryChan <- dbQuery{query, args, nil}
+	// If the message is not a command, call chatCommand to handle the message
+	// ctx.chatCommand(sourceName, msgBody, mentions)
 }
 
 func (ctx *AppContext) debugger() {
 	// Start a debugger session
 	log.Println("Starting debugger session")
-	// A message template to help us test with
+	// A message template to help us test with. This isn't great, one day we should
+	// do this with proper types and structures, and then marshal it to JSON.
 	tpl := `{
 		"envelope":{
 			"source":"+123456789",
@@ -213,9 +217,21 @@ func (ctx *AppContext) debugger() {
 					"destinationNumber":null,
 					"destinationUuid":null,
 					"timestamp":%v,
-					"message":"%s",
+					"message":%s,
 					"expiresInSeconds":604800,
 					"viewOnce":false,
+					"attachments":[
+						{
+							"contentType":"image/jpeg",
+							"filename":"Andromeda_realigned_tiltshift.jpg",
+							"id":"r4aFDRWmi_z2dfVh5iqC.jpg",
+							"size":273635,
+							"width":2048,
+							"height":2048,
+							"caption":null,
+							"uploadTimestamp":null
+						}
+					],
 					"groupInfo":{
 						"groupId":"VGVzdA==",
 						"type":"DELIVER"
@@ -228,7 +244,7 @@ func (ctx *AppContext) debugger() {
 	for {
 		// Start a new span for each message
 		tracer := otel.Tracer("signal-bot")
-		tracerCtx, span := tracer.Start(ctx.TraceContext, "debugger")
+		tracerCtx, span := tracer.Start(ctx.TraceContext, "debugger", trace.WithNewRoot())
 		defer span.End()
 		ctx.TraceContext = tracerCtx
 
@@ -239,7 +255,8 @@ func (ctx *AppContext) debugger() {
 		}
 		// Put the message in the template
 		timeNow := time.Now().Unix() * 1000
-		message := fmt.Sprintf(tpl, timeNow, timeNow, request)
+		escapedMessage, _ := json.Marshal(request)
+		message := fmt.Sprintf(tpl, timeNow, timeNow, string(escapedMessage))
 		// Process the message
 		ctx.processMessage(message)
 	}
@@ -303,23 +320,6 @@ func restClient() {
 	// ...
 }
 
-func (ctx *AppContext) saveMessage(container map[string]interface{}, msgStruct map[string]interface{}) {
-	// Start a new span
-	tracer := otel.Tracer("signal-bot")
-	_, span := tracer.Start(ctx.TraceContext, "saveMessage")
-	defer span.End()
-	// Persist the message to the database at config.statedb
-	ts := container["envelope"].(map[string]interface{})["timestamp"]
-	sourceNumber := container["envelope"].(map[string]interface{})["sourceNumber"]
-	sourceName := container["envelope"].(map[string]interface{})["sourceName"]
-	message := msgStruct["message"]
-	groupId := msgStruct["groupInfo"].(map[string]interface{})["groupId"]
-
-	query := "INSERT INTO messages (timestamp, sourceNumber, sourceName, message, groupId) VALUES (?, ?, ?, ?, ?)"
-	args := []interface{}{ts, sourceNumber, sourceName, message, groupId}
-	ctx.DbQueryChan <- dbQuery{query, args, nil}
-}
-
 func startupValidator() {
 	// In MAX_AGE is not an int, panic
 	if _, err := strconv.Atoi(Config["MAX_AGE"]); err != nil {
@@ -377,6 +377,7 @@ func main() {
 	// Create the application context
 	traceCtx, span := tracer.Start(context.Background(), *mode)
 	defer span.End()
+
 	ctx := AppContext{
 		DbQueryChan:        make(chan dbQuery),
 		DbReplySummaryChan: make(chan interface{}),
