@@ -26,6 +26,7 @@ func summaryOpenai(chatLog string, prompt string) (string, error) {
 	allowedModels := map[string]string{
 		"GPT3Dot5Turbo": openai.GPT3Dot5Turbo,
 		"GPT4o":         openai.GPT4o,
+		"O1Mini":        openai.O1Mini,
 	}
 	// If modelName is not in the allowedModels map, return an error.
 	// We reuse the existing modelName variable here.
@@ -38,24 +39,29 @@ func summaryOpenai(chatLog string, prompt string) (string, error) {
 
 	// Use the given prompt, or read from a file if not provided
 	if prompt == "" {
-		prompt = getSummaryPromptFromFile() + "\n" + chatLog
+		prompt = chatLog + "\n\n'''\n\n" + getSummaryPromptFromFile()
 	} else {
-		prompt = prompt + "\n" + chatLog
+		prompt = chatLog + "\n\n'''\n\n" + prompt
+	}
+
+	Messages := []openai.ChatCompletionMessage{
+		{
+			Role:    openai.ChatMessageRoleUser,
+			Content: prompt,
+		},
+	}
+	// If we are not using the O1Mini model, we need to add a completion message
+	if modelName != openai.O1Mini {
+		Messages = append(Messages, openai.ChatCompletionMessage{
+			Role:    openai.ChatMessageRoleSystem,
+			Content: "you are a helpful chatbot",
+		})
 	}
 
 	// Talk to ChatGPT to generate a summary
 	req := openai.ChatCompletionRequest{
-		Model: modelName,
-		Messages: []openai.ChatCompletionMessage{
-			{
-				Role:    openai.ChatMessageRoleSystem,
-				Content: "you are a helpful chatbot",
-			},
-			{
-				Role:    openai.ChatMessageRoleUser,
-				Content: prompt,
-			},
-		},
+		Model:    modelName,
+		Messages: Messages,
 	}
 
 	resp, err := client.CreateChatCompletion(context.Background(), req)

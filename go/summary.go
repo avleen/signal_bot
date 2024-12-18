@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"regexp"
 	"strings"
 	"time"
 
@@ -94,43 +93,8 @@ func (ctx *AppContext) summaryCommand(starttime int, count int, sourceName strin
 	}
 
 	// Split the summary into chunks and call ctx.MessagePoster for each chunk
-	summaryChunks := splitSummary(summary)
+	summaryChunks := splitLongMessage(summary)
 	for _, chunk := range summaryChunks {
 		ctx.MessagePoster(chunk, "")
 	}
-}
-
-// Function to split the summary into chunks less than or equal to maxSummaryLength
-func splitSummary(summary string) []string {
-	const maxSummaryLength = 2000
-	var chunks []string
-
-	for len(summary) > maxSummaryLength {
-		// Find the substring from index 0 to maxSummaryLength
-		substring := summary[:maxSummaryLength]
-
-		// Check if the substring ends with a paragraph header
-		re := regexp.MustCompile(`\*\*[\w\d\s]+:\*\*`)
-		matches := re.FindAllStringIndex(substring, -1)
-		if len(matches) > 0 {
-			// Find the index of the start of the most recent paragraph
-			paragraphStart := matches[len(matches)-1][0]
-
-			// If a paragraph start is found, split the summary at that index
-			if paragraphStart > 0 {
-				chunks = append(chunks, substring[:paragraphStart])
-				summary = summary[paragraphStart:]
-				continue
-			}
-		}
-
-		// If no paragraph start is found, split the summary at maxSummaryLength
-		chunks = append(chunks, substring)
-		summary = summary[maxSummaryLength:]
-	}
-
-	// Add the remaining part of the summary as the last chunk
-	chunks = append(chunks, summary)
-
-	return chunks
 }

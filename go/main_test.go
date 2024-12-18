@@ -37,7 +37,7 @@ func TestHelpCommand(t *testing.T) {
 	ctx := &AppContext{}
 	expectedMessage := "Available commands:\n" +
 		"!help - Display this help message\n" +
-		"!imagine <text> - Generate an image\n" +
+		"!imagine <text> - Generate an image (other options: !opine, !dream, !nightmare, !hallucinate, !trip)\n" +
 		"!summary <num_msgs|12h> - Generate a summary of last N messages, or last H hours\n" +
 		"!ask <question> - Ask a question\n"
 

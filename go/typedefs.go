@@ -29,3 +29,27 @@ type TimeCountCalculator struct {
 	StartTime int
 	Count     int
 }
+
+type GroupInfo struct {
+	GroupID string `json:"groupId"`
+}
+
+type SentMessage struct {
+	Message   string    `json:"message"`
+	GroupInfo GroupInfo `json:"groupInfo"`
+}
+
+type SyncMessage struct {
+	SentMessage SentMessage `json:"sentMessage"`
+}
+
+type Envelope struct {
+	SourceNumber string      `json:"sourceNumber"`
+	SourceName   string      `json:"sourceName"`
+	Timestamp    int64       `json:"timestamp"`
+	SyncMessage  SyncMessage `json:"syncMessage"`
+}
+
+type ChatbotMessage struct {
+	Envelope Envelope `json:"envelope"`
+}
