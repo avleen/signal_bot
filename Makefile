@@ -1,3 +1,7 @@
+.EXPORT_ALL_VARIABLES:
+
+DOCKER_BUILDKIT = 1
+
 all: build run
 
 build:
