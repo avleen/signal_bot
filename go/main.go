@@ -163,6 +163,11 @@ func (ctx *AppContext) processMessage(message string) {
 		switch words[0] {
 		case "!help":
 			ctx.helpCommand()
+		case "!ping":
+			msgTime := container["envelope"].(map[string]interface{})["timestamp"].(float64)
+			nowTime := time.Now().UnixMilli()
+			elapsedMs := nowTime - int64(msgTime)
+			ctx.MessagePoster(fmt.Sprintf("Pong! Elapsed time: %d ms", elapsedMs), "")
 		case "!imagine", "!opine", "!dream", "!nightmare", "!hallucinate", "!trip":
 			// If words[1:] is empty, call help
 			if len(words) < 2 {

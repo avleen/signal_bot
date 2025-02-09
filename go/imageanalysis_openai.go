@@ -80,6 +80,6 @@ func imageAnalysisOpenai(attachmentId string) (string, error) {
 
 	assistantResponse := resp.Choices[0].Message.Content
 
-	fmt.Printf("Image analysis response: %s", assistantResponse)
+	fmt.Printf("Image analysis response: %s\n", assistantResponse)
 	return assistantResponse, nil
 }
