@@ -18,6 +18,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	_ "github.com/mattn/go-sqlite3"
+	"golang.org/x/exp/rand"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
@@ -168,6 +169,13 @@ func (ctx *AppContext) processMessage(message string) {
 			nowTime := time.Now().UnixMilli()
 			elapsedMs := nowTime - int64(msgTime)
 			ctx.MessagePoster(fmt.Sprintf("Pong! Elapsed time: %d ms", elapsedMs), "")
+		case "!marco":
+			msgTime := container["envelope"].(map[string]interface{})["timestamp"].(float64)
+			nowTime := time.Now().UnixMilli()
+			elapsedMs := nowTime - int64(msgTime)
+			// Pick a random response from the list
+			responses := []string{"Polo!", "Polo! 🏊", "Tasty pollo! 🤽", "Polo? 🤽‍♂️", "....(polo) 🤽‍♀️", "Polloooooo! 🏊‍♂️", "POLO! 🏊‍♀️"}
+			ctx.MessagePoster(fmt.Sprintf("%s (%d ms)", responses[rand.Intn(len(responses))], elapsedMs), "")
 		case "!imagine", "!opine", "!dream", "!nightmare", "!hallucinate", "!trip":
 			// If words[1:] is empty, call help
 			if len(words) < 2 {
