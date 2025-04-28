@@ -1,7 +1,7 @@
 module github.com/avleen/llm_signal_bot
 
 go 1.22.4
-toolchain go1.23.7
+toolchain go1.24.1
 
 require (
 	cloud.google.com/go/vertexai v0.13.1
@@ -34,7 +34,7 @@ require (
 	github.com/google/s2a-go v0.1.8 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.4 // indirect
 	github.com/googleapis/gax-go/v2 v2.13.0 // indirect
-	github.com/sashabaranov/go-openai v1.32.5
+	github.com/sashabaranov/go-openai v1.38.3
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.56.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.56.0 // indirect
