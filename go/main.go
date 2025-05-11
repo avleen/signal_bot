@@ -53,6 +53,8 @@ var Config = map[string]string{
 
 // These parameters are situational and depends on the provider requested.
 var optionalConfig = map[string]string{
+	"CLAUDE_API_KEY":    os.Getenv("CLAUDE_API_KEY"),
+	"CLAUDE_MODEL":      os.Getenv("CLAUDE_MODEL"),
 	"GOOGLE_PROJECT_ID": os.Getenv("GOOGLE_PROJECT_ID"),
 	"GOOGLE_LOCATION":   os.Getenv("GOOGLE_LOCATION"),
 	"GOOGLE_TEXT_MODEL": os.Getenv("GOOGLE_TEXT_MODEL"),
@@ -86,6 +88,21 @@ func initTracer() func() {
 	return func() {
 		if err := tp.Shutdown(context.Background()); err != nil {
 			log.Fatal(err)
+		}
+	}
+}
+
+func initImageAnalyzer() ImageAnalysisFunc {
+	// Set the image analyzer based on the configured provider
+	switch Config["IMAGE_PROVIDER"] {
+	case "claude":
+		return imageAnalysisClaude
+	case "openai":
+		return imageAnalysisOpenai
+	default:
+		// Default to a debug function that just returns the attachment ID
+		return func(attachmentId string) (string, error) {
+			return fmt.Sprintf("DEBUG: Image analysis requested for attachment %s", attachmentId), nil
 		}
 	}
 }
@@ -145,7 +162,7 @@ func (ctx *AppContext) processMessage(message string) {
 	mentions := getMentions(msgStruct)
 
 	// If the message contains attachments, fetch and process them.
-	imageData, err := getImageData(msgStruct)
+	imageData, err := ctx.getImageData(msgStruct)
 	if err != nil {
 		log.Println("Failed to get image data:", err)
 		return
@@ -398,6 +415,7 @@ func main() {
 		DbReplyAskChan:     make(chan interface{}),
 		Recipients:         []string{},
 		TraceContext:       traceCtx,
+		ImageAnalyzer:      initImageAnalyzer(),
 	}
 
 	go ctx.dbWorker()

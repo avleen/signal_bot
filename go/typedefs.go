@@ -16,6 +16,9 @@ type dbReply struct {
 	err  error
 }
 
+// ImageAnalysisFunc is a function type for image analysis providers
+type ImageAnalysisFunc func(attachmentId string) (string, error)
+
 type AppContext struct {
 	DbQueryChan        chan dbQuery
 	DbReplySummaryChan chan interface{}
@@ -23,6 +26,7 @@ type AppContext struct {
 	Recipients         []string
 	MessagePoster      func(string, string)
 	TraceContext       context.Context
+	ImageAnalyzer      ImageAnalysisFunc
 }
 
 type TimeCountCalculator struct {

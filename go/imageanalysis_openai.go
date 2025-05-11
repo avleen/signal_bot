@@ -3,31 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 
 	openai "github.com/sashabaranov/go-openai"
 )
-
-func getImageData(msgStruct map[string]interface{}) ([]string, error) {
-	// If the message contains attachments, fetch and process them.
-	var imageData []string
-	if attachments, ok := msgStruct["attachments"].([]interface{}); ok {
-		for _, attachment := range attachments {
-			attachmentMap := attachment.(map[string]interface{})
-			// If the attachment is an image, call the imageProcessCommand function
-			if attachmentMap["contentType"] == "image/jpeg" {
-				imageAnalysis, err := imageAnalysisOpenai(attachmentMap["id"].(string))
-				if err != nil {
-					log.Println("Failed to process image:", err)
-				} else {
-					// Append the image analysis to the message body
-					imageData = append(imageData, imageAnalysis)
-				}
-			}
-		}
-	}
-	return imageData, nil
-}
 
 func imageAnalysisOpenai(attachmentId string) (string, error) {
 	// Generate a chat response using OpenAI's Chat API

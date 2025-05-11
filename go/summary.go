@@ -87,6 +87,13 @@ func (ctx *AppContext) summaryCommand(starttime int, count int, sourceName strin
 			ctx.MessagePoster("Failed to generate summary: "+err.Error(), "")
 			return
 		}
+	case "claude":
+		summary, err = ctx.summaryClaude(chatLog, prompt)
+		if err != nil {
+			log.Println("Failed to generate summary:", err)
+			ctx.MessagePoster("Failed to generate summary: "+err.Error(), "")
+			return
+		}
 	case "debug":
 		summary = fmt.Sprintf("DEBUG: Requested %d starttime, %d message count\n"+
 			"Chat log: %s", starttime, count, chatLog)
