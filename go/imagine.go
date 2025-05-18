@@ -24,7 +24,7 @@ func (ctx *AppContext) imagineCommand(requestor string, prompt string, flavor st
 	fmt.Printf("Generating image for %s: %s\n", requestor, prompt)
 
 	// Generate the image
-	switch Config["IMAGE_PROVIDER"] {
+	switch Config["IMAGE_GEN_PROVIDER"] {
 	case "openai":
 		// Generate the image using OpenAI
 		filename, revisedPrompt, err = ctx.imagineOpenai(prompt, requestor, flavor)
@@ -43,8 +43,8 @@ func (ctx *AppContext) imagineCommand(requestor string, prompt string, flavor st
 		}
 	// Default case for other providers
 	default:
-		log.Println("Invalid image provider:", Config["IMAGE_PROVIDER"])
-		ctx.MessagePoster("Invalid image provider: "+Config["IMAGE_PROVIDER"], "")
+		log.Println("Invalid image provider:", Config["IMAGE_GEN_PROVIDER"])
+		ctx.MessagePoster("Invalid image provider: "+Config["IMAGE_GEN_PROVIDER"], "")
 		return
 	}
 

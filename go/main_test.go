@@ -14,18 +14,19 @@ func TestStartupValidator(t *testing.T) {
 	}
 	defer os.Remove(dbFile.Name())
 	Config = map[string]string{
-		"MAX_AGE":           "168",
-		"IMAGEDIR":          "/path/to/images",
-		"STATEDB":           dbFile.Name(),
-		"REST_URL":          "http://localhost:8080",
-		"PHONE":             "+123456789",
-		"URL":               "ws://localhost:8080",
-		"GOOGLE_TEXT_MODEL": "text_model",
-		"IMAGE_PROVIDER":    "image_provider",
-		"LOCATION":          "location",
-		"OPENAI_API_KEY":    "api_key",
-		"PROJECT_ID":        "project_id",
-		"SUMMARY_PROVIDER":  "summary_provider",
+		"MAX_AGE":                 "168",
+		"IMAGEDIR":                "/path/to/images",
+		"STATEDB":                 dbFile.Name(),
+		"REST_URL":                "http://localhost:8080",
+		"PHONE":                   "+123456789",
+		"URL":                     "ws://localhost:8080",
+		"GOOGLE_TEXT_MODEL":       "text_model",
+		"IMAGE_ANALYSIS_PROVIDER": "image_provider",
+		"IMAGE_GEN_PROVIDER":      "image_provider",
+		"LOCATION":                "location",
+		"OPENAI_API_KEY":          "api_key",
+		"PROJECT_ID":              "project_id",
+		"SUMMARY_PROVIDER":        "summary_provider",
 	}
 
 	// Call the startupValidator function

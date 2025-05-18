@@ -83,7 +83,8 @@ A docker-compose config like this may be helpful:
         environment:
             - GOOGLE_APPLICATION_CREDENTIALS=/app/auth.json
             - GOOGLE_TEXT_MODEL=gemini-1.5-flash-001
-            - IMAGE_PROVIDER=openai
+            - IMAGE_ANALYSIS_PROVIDER=claude
+            - IMAGE_GEN_PROVIDER=openai
             - IMAGEDIR=/var/lib/signal/images
             - LOCATION=us-central1
             - MAX_AGE=24

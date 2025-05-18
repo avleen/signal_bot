@@ -39,16 +39,17 @@ import (
 //   MAX_AGE: the maximum age of messages to keep
 
 var Config = map[string]string{
-	"BOTNAME":          os.Getenv("BOTNAME"),
-	"CHAT_PROVIDER":    os.Getenv("CHAT_PROVIDER"),
-	"IMAGE_PROVIDER":   os.Getenv("IMAGE_PROVIDER"),
-	"IMAGEDIR":         os.Getenv("IMAGEDIR"),
-	"MAX_AGE":          os.Getenv("MAX_AGE"),
-	"PHONE":            os.Getenv("PHONE"),
-	"REST_URL":         os.Getenv("REST_URL"),
-	"STATEDB":          os.Getenv("STATEDB"),
-	"SUMMARY_PROVIDER": os.Getenv("SUMMARY_PROVIDER"),
-	"URL":              os.Getenv("URL"),
+	"BOTNAME":                 os.Getenv("BOTNAME"),
+	"CHAT_PROVIDER":           os.Getenv("CHAT_PROVIDER"),
+	"IMAGE_ANALYSIS_PROVIDER": os.Getenv("IMAGE_ANALYSIS_PROVIDER"),
+	"IMAGE_GEN_PROVIDER":      os.Getenv("IMAGE_GEN_PROVIDER"),
+	"IMAGEDIR":                os.Getenv("IMAGEDIR"),
+	"MAX_AGE":                 os.Getenv("MAX_AGE"),
+	"PHONE":                   os.Getenv("PHONE"),
+	"REST_URL":                os.Getenv("REST_URL"),
+	"STATEDB":                 os.Getenv("STATEDB"),
+	"SUMMARY_PROVIDER":        os.Getenv("SUMMARY_PROVIDER"),
+	"URL":                     os.Getenv("URL"),
 }
 
 // These parameters are situational and depends on the provider requested.
@@ -94,7 +95,7 @@ func initTracer() func() {
 
 func initImageAnalyzer() ImageAnalysisFunc {
 	// Set the image analyzer based on the configured provider
-	switch Config["IMAGE_PROVIDER"] {
+	switch Config["IMAGE_ANALYSIS_PROVIDER"] {
 	case "claude":
 		return imageAnalysisClaude
 	case "openai":
