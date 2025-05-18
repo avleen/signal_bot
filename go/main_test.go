@@ -8,6 +8,7 @@ import (
 
 func TestStartupValidator(t *testing.T) {
 	// Set up the test environment
+	setupTestEnv()
 	dbFile, err := os.CreateTemp("", "test_*.db")
 	if err != nil {
 		t.Fatal("Failed to create temporary db file")

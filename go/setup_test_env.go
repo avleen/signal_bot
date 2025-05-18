@@ -11,7 +11,7 @@ func setupTestEnv() {
 		"SUMMARY_PROVIDER":  "google",
 		"GOOGLE_LOCATION":   "us-central1",
 		"GOOGLE_PROJECT_ID": "tmp-k8s-tutorial",
-		"GOOGLE_TEXT_MODEL": "gemini-1.5-flash-001",
+		"GOOGLE_TEXT_MODEL": "gemini-2.0-flash-lite-001",
 	}
 
 	for envName, envValue := range test_config {
