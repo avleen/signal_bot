@@ -41,6 +41,11 @@ func (ctx *AppContext) imagineCommand(requestor string, prompt string, flavor st
 			ctx.MessagePoster("Failed to generate image: "+err.Error(), "")
 			return
 		}
+	// Default case for other providers
+	default:
+		log.Println("Invalid image provider:", Config["IMAGE_PROVIDER"])
+		ctx.MessagePoster("Invalid image provider: "+Config["IMAGE_PROVIDER"], "")
+		return
 	}
 
 	ctx.MessagePoster(revisedPrompt, filename)

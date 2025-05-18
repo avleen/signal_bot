@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 )
 
@@ -37,27 +36,6 @@ type ClaudeImageResponse struct {
 	Content []struct {
 		Text string `json:"text"`
 	} `json:"content"`
-}
-
-func getImageDataClaude(msgStruct map[string]interface{}) ([]string, error) {
-	// If the message contains attachments, fetch and process them.
-	var imageData []string
-	if attachments, ok := msgStruct["attachments"].([]interface{}); ok {
-		for _, attachment := range attachments {
-			attachmentMap := attachment.(map[string]interface{})
-			// If the attachment is an image, call the imageAnalysisFunction
-			if attachmentMap["contentType"] == "image/jpeg" {
-				imageAnalysis, err := imageAnalysisClaude(attachmentMap["id"].(string))
-				if err != nil {
-					log.Println("Failed to process image:", err)
-				} else {
-					// Append the image analysis to the message body
-					imageData = append(imageData, imageAnalysis)
-				}
-			}
-		}
-	}
-	return imageData, nil
 }
 
 func imageAnalysisClaude(attachmentId string) (string, error) {
