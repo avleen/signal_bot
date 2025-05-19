@@ -3,7 +3,7 @@ module github.com/avleen/llm_signal_bot
 go 1.24.3
 
 require (
-	cloud.google.com/go/vertexai v0.13.3
+	cloud.google.com/go/vertexai v0.13.4
 	github.com/gorilla/websocket v1.5.3
 	github.com/mattn/go-sqlite3 v1.14.28
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.35.0
